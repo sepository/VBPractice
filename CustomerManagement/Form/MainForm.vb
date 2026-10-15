@@ -17,12 +17,42 @@ Public Class MainForm
 
     Private Sub SetupGrid()
         With dgvCustomers
+            .AutoGenerateColumns = False
             .Columns.Clear()
-            .Columns.Add(New DataGridViewTextBoxColumn With {.DataPropertyName = "CustomerId", .HeaderText = "ID", .Width = 50})
-            .Columns.Add(New DataGridViewTextBoxColumn With {.DataPropertyName = "Name", .HeaderText = "名前", .Width = 140})
-            .Columns.Add(New DataGridViewTextBoxColumn With {.DataPropertyName = "Kana", .HeaderText = "フリガナ", .Width = 140})
-            .Columns.Add(New DataGridViewTextBoxColumn With {.DataPropertyName = "Email", .HeaderText = "メール", .Width = 180})
-            .Columns.Add(New DataGridViewTextBoxColumn With {.DataPropertyName = "Phone", .HeaderText = "電話", .Width = 110})
+            .Columns.Add(New DataGridViewTextBoxColumn With {
+                         .DataPropertyName = "CustomerId",
+                         .HeaderText = "ID",
+                         .Width = 50})
+            .Columns.Add(New DataGridViewTextBoxColumn With {
+                         .DataPropertyName = "Name",
+                         .HeaderText = "名前",
+                         .Width = 140})
+            .Columns.Add(New DataGridViewTextBoxColumn With {
+                         .DataPropertyName = "Kana",
+                         .HeaderText = "フリガナ",
+                         .Width = 140})
+            .Columns.Add(New DataGridViewTextBoxColumn With {
+                         .DataPropertyName = "Email",
+                         .HeaderText = "メール",
+                         .Width = 180})
+            .Columns.Add(New DataGridViewTextBoxColumn With {
+                         .DataPropertyName = "Phone",
+                         .HeaderText = "電話",
+                         .Width = 110})
+            .Columns.Add(New DataGridViewTextBoxColumn With {
+                         .DataPropertyName = "OrderCount",
+                         .HeaderText = "注文数",
+                         .Width = 60,
+                         .DefaultCellStyle = New DataGridViewCellStyle With {
+                            .Alignment = DataGridViewContentAlignment.MiddleRight}
+                         })
+            .Columns.Add(New DataGridViewTextBoxColumn With {
+                         .DataPropertyName = "TotalAmount",
+                         .HeaderText = "累計金額",
+                         .Width = 100,
+                         .DefaultCellStyle = New DataGridViewCellStyle With {
+                            .Format = "N0", .Alignment = DataGridViewContentAlignment.MiddleRight}
+                         })
             .ReadOnly = True
             .AllowUserToResizeRows = False
             .MultiSelect = False
@@ -159,7 +189,7 @@ Public Class MainForm
             Return
         End If
 
-        Dim answer As DialogResult = MessageBox.Show(
+        Dim answer = MessageBox.Show(
             $"{txtName.Text}を削除します。よろしいですか？",
             "削除の確認",
             MessageBoxButtons.YesNo,
@@ -172,11 +202,45 @@ Public Class MainForm
 
         Try
             _repo.Delete(_currentId.Value)
-            LoadCustomers()
-            ClearForm()
+            LoadCustomers
+            ClearForm
         Catch ex As SqlException
             ShowError("顧客データの削除に失敗しました。", ex)
         End Try
+    End Sub
+
+    Private Sub btnOrders_Click(sender As Object, e As EventArgs) Handles btnOrders.Click
+        If Not _currentId.HasValue Then
+            MessageUtils.ShowInformaion("注文を管理する顧客を一覧から選択してください。", "注文管理")
+            Return
+        End If
+
+        Dim customerId As Integer = _currentId
+
+        Using frm As New OrderForm(customerId, txtName.Text)
+            frm.ShowDialog(Me)
+        End Using
+
+        ' 注文管理編集後、再読み込みする
+        LoadCustomers()
+        SelectRowById(customerId)
+    End Sub
+
+    ''' <summary>
+    ''' 顧客IDの一致する行を選択
+    ''' </summary>
+    ''' <param name="customerId">
+    ''' 顧客ID
+    ''' </param>
+    Private Sub SelectRowById(customerId As Integer)
+        For Each row As DataGridViewRow In dgvCustomers.Rows
+            Dim c As Customer = TryCast(row.DataBoundItem, Customer)
+            If c IsNot Nothing AndAlso c.CustomerId = customerId Then
+                dgvCustomers.CurrentCell = row.Cells(0)
+                row.Selected = True
+                Return
+            End If
+        Next
     End Sub
 
     ''' <summary>

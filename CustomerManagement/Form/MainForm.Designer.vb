@@ -43,6 +43,7 @@ Partial Class MainForm
         btnNew = New Button()
         btnSave = New Button()
         btnDelete = New Button()
+        btnOrders = New Button()
         CType(dgvCustomers, ComponentModel.ISupportInitialize).BeginInit()
         GroupBox1.SuspendLayout()
         GroupBox2.SuspendLayout()
@@ -127,6 +128,7 @@ Partial Class MainForm
         ' 
         ' GroupBox2
         ' 
+        GroupBox2.Controls.Add(btnOrders)
         GroupBox2.Controls.Add(txtAddress)
         GroupBox2.Controls.Add(Label7)
         GroupBox2.Controls.Add(txtMemo)
@@ -238,6 +240,15 @@ Partial Class MainForm
         btnDelete.Text = "削除"
         btnDelete.UseVisualStyleBackColor = True
         ' 
+        ' btnOrders
+        ' 
+        btnOrders.Location = New Point(298, 138)
+        btnOrders.Name = "btnOrders"
+        btnOrders.Size = New Size(75, 23)
+        btnOrders.TabIndex = 5
+        btnOrders.Text = "注文管理"
+        btnOrders.UseVisualStyleBackColor = True
+        ' 
         ' MainForm
         ' 
         AutoScaleDimensions = New SizeF(7F, 15F)
@@ -280,5 +291,6 @@ Partial Class MainForm
     Friend WithEvents btnDelete As Button
     Friend WithEvents txtAddress As TextBox
     Friend WithEvents Label7 As Label
+    Friend WithEvents btnOrders As Button
 
 End Class

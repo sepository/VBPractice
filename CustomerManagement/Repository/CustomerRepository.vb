@@ -22,12 +22,17 @@ Public Class CustomerRepository
         Dim result As New List(Of Customer)()
         Dim hasKeyword As Boolean = Not String.IsNullOrEmpty(keyword)
 
-        Dim sql As String = "SELECT CustomerId, Name, Kana, Email, Phone, Address, Memo, CreatedAt, UpdatedAt " &
-                            "FROM dbo.Customers"
+        Dim sql As String = "SELECT c.CustomerId, c.Name, c.Kana, c.Email, c.Phone, c.Address, " &
+                            "c.Memo, c.CreatedAt, c.UpdatedAt, " &
+                            "COUNT(o.OrderId) AS OrderCount, " &
+                            "ISNULL(SUM(o.Quantity * o.UnitPrice), 0) AS TotalAmount " &
+                            "FROM dbo.Customers As c " &
+                            "LEFT JOIN dbo.Orders AS o ON o.CustomerId = c.CustomerId "
         If hasKeyword Then
-            sql &= " WHERE Name LIKE @kw OR Kana LIKE @kw OR Email LIKE @kw OR Phone LIKE @kw"
+            sql &= "WHERE Name LIKE @kw OR Kana LIKE @kw OR Email LIKE @kw OR Phone LIKE @kw "
         End If
-        sql &= " ORDER BY CustomerId"
+        sql &= "GROUP BY c.CustomerId, c.Name, c.Kana, c.Email, c.Phone, c.Address, c.Memo, c.CreatedAt, c.UpdatedAt "
+        sql &= "ORDER BY c.CustomerId "
 
         Using conn As New SqlConnection(_connectionString)
             Using cmd As New SqlCommand(sql, conn)
@@ -38,7 +43,10 @@ Public Class CustomerRepository
                 conn.Open()
                 Using reader As SqlDataReader = cmd.ExecuteReader()
                     While reader.Read()
-                        result.Add(MapCustomer(reader))
+                        Dim customer As Customer = MapCustomer(reader)
+                        customer.OrderCount = reader.GetInt32(9)
+                        customer.TotalAmount = reader.GetDecimal(10)
+                        result.Add(customer)
                     End While
                 End Using
             End Using

@@ -14,4 +14,8 @@ Public Class Customer
     Public Property CreatedAt As DateTime
     Public Property UpdatedAt As DateTime
 
+    ' 表示専用(JOIN)
+    Public Property OrderCount As Integer
+    Public Property TotalAmount As Decimal
+
 End Class
