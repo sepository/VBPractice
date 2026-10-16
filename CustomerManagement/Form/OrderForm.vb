@@ -19,6 +19,11 @@
     Private _currentOrderId As Integer? = Nothing
 
     ''' <summary>
+    ''' DBアクセス中、二重処理や画面終了を防ぐ。
+    ''' </summary>
+    Private _isBusy As Boolean = False
+
+    ''' <summary>
     ''' コンストラクタ(呼び出さない)
     ''' </summary>
     Public Sub New()
@@ -43,12 +48,26 @@
     ''' <summary>
     ''' 起動時の処理
     ''' </summary>
-    Private Sub OrderForm_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+    Private Async Sub OrderForm_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         Text = $"注文管理 - {_customerName}"
         lblCustomer.Text = $"{_customerName}(ID:{_customerId})"
         SetupGrid()
-        LoadOrders()
+        SetBusy(True)
+        Try
+            Await LoadOrdersAsync()
+        Finally
+            SetBusy(False)
+        End Try
         ClearForm()
+    End Sub
+
+    ''' <summary>
+    ''' 画面を閉じる際、DBアクセス中ならキャンセルさせる。
+    ''' </summary>
+    Private Sub MainForm_FormClosing(sender As Object, e As FormClosingEventArgs) Handles MyBase.FormClosing
+        If _isBusy Then
+            e.Cancel = True
+        End If
     End Sub
 
     ''' <summary>
@@ -94,11 +113,24 @@
     End Sub
 
     ''' <summary>
+    ''' DBアクセス中、操作ボタンを無効にし、待機カーソルにする。
+    ''' </summary>
+    Private Sub SetBusy(busy As Boolean)
+        _isBusy = busy
+        UseWaitCursor = busy
+
+        For Each ctrl As Control In New Control() {
+            dgvOrders, btnNew, btnSave, btnDelete, btnClose}
+            ctrl.Enabled = Not busy
+        Next
+    End Sub
+
+    ''' <summary>
     ''' 注文情報の取得
     ''' </summary>
-    Private Sub LoadOrders()
+    Private Async Function LoadOrdersAsync() As Task
         Try
-            Dim orders As List(Of CustomerOrder) = _repo.GetByCustomerId(_customerId)
+            Dim orders As List(Of CustomerOrder) = Await _repo.GetByCustomerIdAsync(_customerId)
             dgvOrders.DataSource = orders
 
             Dim total As Decimal = orders.Sum(Function(o) o.Amount)
@@ -106,7 +138,7 @@
         Catch ex As Exception
             ShowError("注文データの取得に失敗しました。", ex)
         End Try
-    End Sub
+    End Function
 
     ''' <summary>
     ''' 選択した行の情報を表示
@@ -132,7 +164,7 @@
         Handles numQuantity.ValueChanged, numUnitPrice.ValueChanged
 
         Dim amount As Decimal = numQuantity.Value * numUnitPrice.Value
-        lblAmount.Text = $"{amount}円"
+        lblAmount.Text = $"{amount:N0}円"
     End Sub
 
     ''' <summary>
@@ -146,7 +178,7 @@
     ''' <summary>
     ''' 保存
     ''' </summary>
-    Private Sub btnSave_Click(sender As Object, e As EventArgs) Handles btnSave.Click
+    Private Async Sub btnSave_Click(sender As Object, e As EventArgs) Handles btnSave.Click
         If String.IsNullOrWhiteSpace(txtProductName.Text) Then
             ShowWarning("商品名を入力してください。", "入力エラー")
             txtProductName.Focus()
@@ -161,28 +193,32 @@
             .UnitPrice = numUnitPrice.Value,
             .Note = txtNote.Text
         }
+        Dim editingId As Integer? = _currentOrderId
 
+        SetBusy(True)
         Try
-            If _currentOrderId.HasValue Then
-                o.OrderId = _currentOrderId.Value
-                If Not _repo.Update(o) Then
+            If editingId.HasValue Then
+                o.OrderId = editingId.Value
+                If Not Await _repo.UpdateAsync(o) Then
                     ShowWarning("対象の注文が見つかりませんでした。", "更新できません")
                 End If
             Else
-                _repo.Insert(o)
+                Await _repo.InsertAsync(o)
             End If
 
-            LoadOrders()
+            Await LoadOrdersAsync()
             ClearForm()
         Catch ex As Exception
             ShowError("注文データの保存に失敗しました。", ex)
+        Finally
+            SetBusy(False)
         End Try
     End Sub
 
     ''' <summary>
     ''' 削除
     ''' </summary>
-    Private Sub btnDelete_Click(sender As Object, e As EventArgs) Handles btnDelete.Click
+    Private Async Sub btnDelete_Click(sender As Object, e As EventArgs) Handles btnDelete.Click
         If Not _currentOrderId.HasValue Then
             ShowInformaion("削除する注文を一覧から選択してください。", "削除")
             Return
@@ -194,12 +230,17 @@
             Return
         End If
 
+        Dim targetId As Integer = _currentOrderId
+
+        SetBusy(True)
         Try
-            _repo.Delete(_currentOrderId.Value)
-            LoadOrders()
+            Await _repo.DeleteAsync(targetId)
+            Await LoadOrdersAsync()
             ClearForm()
         Catch ex As Exception
             ShowError("注文データの削除に失敗しました。", ex)
+        Finally
+            SetBusy(False)
         End Try
     End Sub
 

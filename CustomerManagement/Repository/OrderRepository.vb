@@ -17,13 +17,13 @@ Public Class OrderRepository
     ''' <returns>
     ''' 注文情報
     ''' </returns>
-    Public Function GetByCustomerId(customerId As Integer) As List(Of CustomerOrder)
+    Public Async Function GetByCustomerIdAsync(customerId As Integer) As Task(Of List(Of CustomerOrder))
         Using db As New AppDbContext(_connectionString)
-            Return db.Orders.AsNoTracking().
+            Return Await db.Orders.AsNoTracking().
                 Where(Function(o) o.CustomerId = customerId).
                 OrderByDescending(Function(o) o.OrderDate).
                 ThenByDescending(Function(o) o.OrderId).
-                ToList()
+                ToListAsync()
         End Using
     End Function
 
@@ -36,7 +36,7 @@ Public Class OrderRepository
     ''' <returns>
     ''' 注文ID
     ''' </returns>
-    Public Function Insert(order As CustomerOrder) As Integer
+    Public Async Function InsertAsync(order As CustomerOrder) As Task(Of Integer)
         Using db As New AppDbContext(_connectionString)
             Dim entity As New CustomerOrder With {
                 .CustomerId = order.CustomerId,
@@ -48,7 +48,7 @@ Public Class OrderRepository
             }
 
             db.Orders.Add(entity)
-            db.SaveChanges()
+            Await db.SaveChangesAsync()
 
             Return entity.OrderId
         End Using
@@ -63,7 +63,7 @@ Public Class OrderRepository
     ''' <returns>
     ''' 成功 => True
     ''' </returns>
-    Public Function Update(order As CustomerOrder) As Boolean
+    Public Async Function UpdateAsync(order As CustomerOrder) As Task(Of Boolean)
         Using db As New AppDbContext(_connectionString)
             Dim entity As CustomerOrder = db.Orders.FirstOrDefault(Function(o) o.OrderId = order.OrderId)
             If entity Is Nothing Then
@@ -77,7 +77,7 @@ Public Class OrderRepository
             entity.Note = NullIfBlank(order.Note)
             entity.UpdatedAt = DateTime.Now
 
-            db.SaveChanges()
+            Await db.SaveChangesAsync()
             Return True
         End Using
     End Function
@@ -91,7 +91,7 @@ Public Class OrderRepository
     ''' <returns>
     ''' 成功 => True
     ''' </returns>
-    Public Function Delete(orderId As Integer) As Boolean
+    Public Async Function DeleteAsync(orderId As Integer) As Task(Of Boolean)
         Using db As New AppDbContext(_connectionString)
             Dim entity As CustomerOrder = db.Orders.Find(orderId)
             If entity Is Nothing Then
@@ -99,7 +99,7 @@ Public Class OrderRepository
             End If
 
             db.Orders.Remove(entity)
-            db.SaveChanges()
+            Await db.SaveChangesAsync()
             Return True
         End Using
     End Function

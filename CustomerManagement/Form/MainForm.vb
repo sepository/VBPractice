@@ -4,15 +4,38 @@ Public Class MainForm
 
     Private ReadOnly _repo As New CustomerRepository(AppConfig.ConnectionString)
 
+    ''' <summary>
+    ''' 顧客ID
+    ''' Nothingの場合、新規登録モード
+    ''' </summary>
     Private _currentId As Integer? = Nothing
+
+    ''' <summary>
+    ''' DBアクセス中、二重処理や画面終了を防ぐ。
+    ''' </summary>
+    Private _isBusy As Boolean = False
 
     ''' <summary>
     ''' 起動時
     ''' </summary>
-    Private Sub MainForm_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+    Private Async Sub MainForm_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         SetupGrid()
-        LoadCustomers()
+        SetBusy(True)
+        Try
+            Await LoadCustomersAsync()
+        Finally
+            SetBusy(False)
+        End Try
         ClearForm()
+    End Sub
+
+    ''' <summary>
+    ''' 画面を閉じる際、DBアクセス中ならキャンセルさせる。
+    ''' </summary>
+    Private Sub MainForm_FormClosing(sender As Object, e As FormClosingEventArgs) Handles MyBase.FormClosing
+        If _isBusy Then
+            e.Cancel = True
+        End If
     End Sub
 
     Private Sub SetupGrid()
@@ -60,19 +83,38 @@ Public Class MainForm
         End With
     End Sub
 
-    Private Sub LoadCustomers()
+    ''' <summary>
+    ''' DBアクセス中、操作ボタンを無効にし、待機カーソルにする。
+    ''' </summary>
+    Private Sub SetBusy(busy As Boolean)
+        _isBusy = busy
+        UseWaitCursor = busy
+
+        For Each ctrl As Control In New Control() {
+            txtSearch, btnSearch, dgvCustomers, btnNew, btnSave, btnDelete, btnOrders}
+            ctrl.Enabled = Not busy
+        Next
+    End Sub
+
+    Private Async Function LoadCustomersAsync() As Task
         Try
-            dgvCustomers.DataSource = _repo.GetAll(txtSearch.Text)
+            Dim customers As List(Of Customer) = Await _repo.GetAllAsync(txtSearch.Text)
+            dgvCustomers.DataSource = customers
         Catch ex As Exception
             ShowError("顧客データの取得に失敗しました。", ex)
         End Try
-    End Sub
+    End Function
 
     ''' <summary>
     ''' 検索
     ''' </summary>
-    Private Sub btnSearch_Click(sender As Object, e As EventArgs) Handles btnSearch.Click
-        LoadCustomers()
+    Private Async Sub btnSearch_Click(sender As Object, e As EventArgs) Handles btnSearch.Click
+        SetBusy(True)
+        Try
+            Await LoadCustomersAsync()
+        Finally
+            SetBusy(False)
+        End Try
         ClearForm()
     End Sub
 
@@ -124,7 +166,7 @@ Public Class MainForm
     ''' <summary>
     ''' 保存
     ''' </summary>
-    Private Sub btnSave_Click(sender As Object, e As EventArgs) Handles btnSave.Click
+    Private Async Sub btnSave_Click(sender As Object, e As EventArgs) Handles btnSave.Click
         If Not ValidateInput() Then Return
 
         Dim c As New Customer With {
@@ -135,21 +177,25 @@ Public Class MainForm
             .Address = txtAddress.Text,
             .Memo = txtMemo.Text
         }
+        Dim editingId As Integer? = _currentId
 
+        SetBusy(True)
         Try
-            If _currentId.HasValue Then
-                c.CustomerId = _currentId.Value
-                If Not _repo.Update(c) Then
+            If editingId.HasValue Then
+                c.CustomerId = editingId.Value
+                If Not Await _repo.UpdateAsync(c) Then
                     ShowWarning("対象の顧客が見つかりませんでした。他で削除された可能性があります。", "更新できません")
                 End If
             Else
-                _repo.Insert(c)
+                Await _repo.InsertAsync(c)
             End If
 
-            LoadCustomers()
+            Await LoadCustomersAsync()
             ClearForm()
         Catch ex As Exception
             ShowError("顧客データの保存に失敗しました。", ex)
+        Finally
+            SetBusy(False)
         End Try
     End Sub
 
@@ -183,7 +229,7 @@ Public Class MainForm
     ''' <summary>
     ''' 削除
     ''' </summary>
-    Private Sub btnDelete_Click(sender As Object, e As EventArgs) Handles btnDelete.Click
+    Private Async Sub btnDelete_Click(sender As Object, e As EventArgs) Handles btnDelete.Click
         If Not _currentId.HasValue Then
             ShowInformaion("削除する顧客を一覧から選択してください。", "削除")
             Return
@@ -195,18 +241,23 @@ Public Class MainForm
             Return
         End If
 
+        Dim targetId As Integer = _currentId
+
+        SetBusy(True)
         Try
-            _repo.Delete(_currentId.Value)
-            LoadCustomers()
+            Await _repo.DeleteAsync(targetId)
+            Await LoadCustomersAsync()
             ClearForm()
         Catch ex As DbUpdateException When IsForeignKeyViolation(ex)
             ShowWarning($"この顧客には注文が登録されているため削除できません。{vbCrLf}さきに注文管理で注文を削除してください。", "削除できません。")
         Catch ex As Exception
             ShowError("顧客データの削除に失敗しました。", ex)
+        Finally
+            SetBusy(False)
         End Try
     End Sub
 
-    Private Sub btnOrders_Click(sender As Object, e As EventArgs) Handles btnOrders.Click
+    Private Async Sub btnOrders_Click(sender As Object, e As EventArgs) Handles btnOrders.Click
         If Not _currentId.HasValue Then
             ShowInformaion("注文を管理する顧客を一覧から選択してください。", "注文管理")
             Return
@@ -219,7 +270,12 @@ Public Class MainForm
         End Using
 
         ' 注文管理編集後、再読み込みする
-        LoadCustomers()
+        SetBusy(True)
+        Try
+            Await LoadCustomersAsync()
+        Finally
+            SetBusy(False)
+        End Try
         SelectRowById(customerId)
     End Sub
 

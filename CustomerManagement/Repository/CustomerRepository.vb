@@ -21,7 +21,7 @@ Public Class CustomerRepository
     ''' 検索ワード
     ''' </param>
     ''' <returns></returns>
-    Public Function GetAll(Optional keyword As String = Nothing) As List(Of Customer)
+    Public Async Function GetAllAsync(Optional keyword As String = Nothing) As Task(Of List(Of Customer))
         Using db As New AppDbContext(_connectionString)
             Dim query As IQueryable(Of Customer) = db.Customers.AsNoTracking()
 
@@ -36,12 +36,12 @@ Public Class CustomerRepository
             End If
 
             ' LEFT JOIN, GROUP BY
-            Dim rows = query.OrderBy(Function(c) c.CustomerId).Select(
+            Dim rows = Await query.OrderBy(Function(c) c.CustomerId).Select(
                 Function(c) New With {
                     .Customer = c,
                     .OrderCount = c.Orders.Count(),
                     .TotalAmount = c.Orders.Sum(Function(o) o.Quantity * o.UnitPrice)
-                }).ToList()
+                }).ToListAsync()
 
             Dim result As New List(Of Customer)()
             For Each r In rows
@@ -63,9 +63,9 @@ Public Class CustomerRepository
     ''' <returns>
     ''' 顧客情報1件、存在しなければNothing
     ''' </returns>
-    Public Function GetById(customerId As Integer) As Customer
+    Public Async Function GetByIdAsync(customerId As Integer) As Task(Of Customer)
         Using db As New AppDbContext(_connectionString)
-            Return db.Customers.AsNoTracking().FirstOrDefault(Function(c) c.CustomerId = customerId)
+            Return Await db.Customers.AsNoTracking().FirstOrDefaultAsync(Function(c) c.CustomerId = customerId)
         End Using
     End Function
 
@@ -78,7 +78,7 @@ Public Class CustomerRepository
     ''' <returns>
     ''' 顧客識別番号
     ''' </returns>
-    Public Function Insert(customer As Customer) As Integer
+    Public Async Function InsertAsync(customer As Customer) As Task(Of Integer)
         Using db As New AppDbContext(_connectionString)
             Dim entity As New Customer With {
                 .Name = customer.Name.Trim(),
@@ -90,7 +90,7 @@ Public Class CustomerRepository
             }
 
             db.Customers.Add(entity)
-            db.SaveChanges()
+            Await db.SaveChangesAsync()
 
             Return entity.CustomerId
         End Using
@@ -103,7 +103,7 @@ Public Class CustomerRepository
     ''' 顧客情報
     ''' </param>
     ''' <returns></returns>
-    Public Function Update(customer As Customer) As Boolean
+    Public Async Function UpdateAsync(customer As Customer) As Task(Of Boolean)
         Using db As New AppDbContext(_connectionString)
             Dim entity As Customer = db.Customers.FirstOrDefault(Function(c) c.CustomerId = customer.CustomerId)
             If entity Is Nothing Then
@@ -118,7 +118,7 @@ Public Class CustomerRepository
             entity.Memo = NullIfBlank(customer.Memo)
             entity.UpdatedAt = DateTime.Now
 
-            db.SaveChanges()
+            Await db.SaveChangesAsync()
             Return True
         End Using
     End Function
@@ -130,7 +130,7 @@ Public Class CustomerRepository
     ''' 顧客識別番号
     ''' </param>
     ''' <returns></returns>
-    Public Function Delete(customerId As Integer) As Boolean
+    Public Async Function DeleteAsync(customerId As Integer) As Task(Of Boolean)
         Using db As New AppDbContext(_connectionString)
             Dim entity As Customer = db.Customers.Find(customerId)
             If entity Is Nothing Then
@@ -138,7 +138,7 @@ Public Class CustomerRepository
             End If
 
             db.Customers.Remove(entity)
-            db.SaveChanges()
+            Await db.SaveChangesAsync()
             Return True
         End Using
     End Function
