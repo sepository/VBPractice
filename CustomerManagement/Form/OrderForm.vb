@@ -68,31 +68,26 @@ Public Class OrderForm
             .Columns.Add(New DataGridViewTextBoxColumn With {
                          .DataPropertyName = "OrderId",
                          .HeaderText = "ID",
-                         .Width = 50
-            })
+                         .Width = 50})
             .Columns.Add(New DataGridViewTextBoxColumn With {
                          .DataPropertyName = "ProductName",
                          .HeaderText = "商品名",
-                         .Width = 180
-            })
+                         .Width = 180})
             .Columns.Add(New DataGridViewTextBoxColumn With {
                          .DataPropertyName = "Quantity",
                          .HeaderText = "数量",
                          .Width = 60,
-                         .DefaultCellStyle = rightAligned
-            })
+                         .DefaultCellStyle = rightAligned})
             .Columns.Add(New DataGridViewTextBoxColumn With {
                          .DataPropertyName = "UnitPrice",
                          .HeaderText = "単価",
                          .Width = 90,
-                         .DefaultCellStyle = rightAligned
-            })
+                         .DefaultCellStyle = rightAligned})
             .Columns.Add(New DataGridViewTextBoxColumn With {
                          .DataPropertyName = "Amount",
                          .HeaderText = "金額",
                          .Width = 100,
-                         .DefaultCellStyle = rightAligned
-            })
+                         .DefaultCellStyle = rightAligned})
             .ReadOnly = True
             .AllowUserToAddRows = False
             .MultiSelect = False

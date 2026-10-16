@@ -3,11 +3,10 @@ Imports System.Data.Common
 Imports Microsoft.Data.SqlClient
 
 Public Class CustomerRepository
-
-    Private ReadOnly _connectionString As String
+    Inherits Repository
 
     Public Sub New(connectionString As String)
-        _connectionString = connectionString
+        MyBase.New(connectionString)
     End Sub
 
     ''' <summary>
@@ -34,7 +33,7 @@ Public Class CustomerRepository
         sql &= "GROUP BY c.CustomerId, c.Name, c.Kana, c.Email, c.Phone, c.Address, c.Memo, c.CreatedAt, c.UpdatedAt "
         sql &= "ORDER BY c.CustomerId "
 
-        Using conn As New SqlConnection(_connectionString)
+        Using conn As SqlConnection = CreateConnection()
             Using cmd As New SqlCommand(sql, conn)
                 If hasKeyword Then
                     cmd.Parameters.Add("@kw", SqlDbType.NVarChar, 200).Value = "%" & keyword.Trim() & "%"
@@ -69,7 +68,7 @@ Public Class CustomerRepository
             "SELECT CustomerId, Name, Kana, Email, Phone, Address, Memo, CreatedAt, UpdatedAt " &
             "FROM dbo.Customers WHERE CustomerId = @CustomerId"
 
-        Using conn As New SqlConnection(_connectionString)
+        Using conn As SqlConnection = CreateConnection()
             Using cmd As New SqlCommand(sql, conn)
                 cmd.Parameters.Add("@CustomerId", SqlDbType.Int).Value = customerId
 
@@ -100,7 +99,7 @@ Public Class CustomerRepository
             "OUTPUT INSERTED.CustomerId " &
             "VALUES (@Name, @Kana, @Email, @Phone, @Address, @Memo)"
 
-        Using conn As New SqlConnection(_connectionString)
+        Using conn As SqlConnection = CreateConnection()
             Using cmd As New SqlCommand(sql, conn)
                 AddCustomerParameters(cmd, customer)
 
@@ -123,7 +122,7 @@ Public Class CustomerRepository
             "SET Name = @Name, Kana = @Kana, Email = @Email, Phone = @Phone, Address = @Address, Memo = @Memo, UpdatedAt = SYSDATETIME() " &
             "WHERE CustomerId = @CustomerId"
 
-        Using conn As New SqlConnection(_connectionString)
+        Using conn As SqlConnection = CreateConnection()
             Using cmd As New SqlCommand(sql, conn)
                 AddCustomerParameters(cmd, customer)
                 cmd.Parameters.Add("@CustomerId", SqlDbType.Int).Value = customer.CustomerId
@@ -145,7 +144,7 @@ Public Class CustomerRepository
         Const sql As String =
             "DELETE FROM dbo.Customers WHERE CustomerId = @CustomerId"
 
-        Using conn As New SqlConnection(_connectionString)
+        Using conn As SqlConnection = CreateConnection()
             Using cmd As New SqlCommand(sql, conn)
                 cmd.Parameters.Add("@CustomerId", SqlDbType.Int).Value = customerId
 
