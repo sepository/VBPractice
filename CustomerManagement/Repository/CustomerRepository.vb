@@ -1,12 +1,16 @@
 ﻿Imports System.Data
 Imports System.Data.Common
+Imports System.IO
 Imports Microsoft.Data.SqlClient
+Imports Microsoft.EntityFrameworkCore
+Imports Microsoft.Extensions.Logging.Abstractions
 
 Public Class CustomerRepository
-    Inherits Repository
+
+    Private ReadOnly _connectionString As String
 
     Public Sub New(connectionString As String)
-        MyBase.New(connectionString)
+        _connectionString = connectionString
     End Sub
 
     ''' <summary>
@@ -18,40 +22,36 @@ Public Class CustomerRepository
     ''' </param>
     ''' <returns></returns>
     Public Function GetAll(Optional keyword As String = Nothing) As List(Of Customer)
-        Dim result As New List(Of Customer)()
-        Dim hasKeyword As Boolean = Not String.IsNullOrEmpty(keyword)
+        Using db As New AppDbContext(_connectionString)
+            Dim query As IQueryable(Of Customer) = db.Customers.AsNoTracking()
 
-        Dim sql As String = "SELECT c.CustomerId, c.Name, c.Kana, c.Email, c.Phone, c.Address, " &
-                            "c.Memo, c.CreatedAt, c.UpdatedAt, " &
-                            "COUNT(o.OrderId) AS OrderCount, " &
-                            "ISNULL(SUM(o.Quantity * o.UnitPrice), 0) AS TotalAmount " &
-                            "FROM dbo.Customers As c " &
-                            "LEFT JOIN dbo.Orders AS o ON o.CustomerId = c.CustomerId "
-        If hasKeyword Then
-            sql &= "WHERE Name LIKE @kw OR Kana LIKE @kw OR Email LIKE @kw OR Phone LIKE @kw "
-        End If
-        sql &= "GROUP BY c.CustomerId, c.Name, c.Kana, c.Email, c.Phone, c.Address, c.Memo, c.CreatedAt, c.UpdatedAt "
-        sql &= "ORDER BY c.CustomerId "
+            ' WHERE
+            If Not String.IsNullOrWhiteSpace(keyword) Then
+                Dim kw As String = keyword.Trim()
 
-        Using conn As SqlConnection = CreateConnection()
-            Using cmd As New SqlCommand(sql, conn)
-                If hasKeyword Then
-                    cmd.Parameters.Add("@kw", SqlDbType.NVarChar, 200).Value = "%" & keyword.Trim() & "%"
-                End If
+                query = query.Where(Function(c) c.Name.Contains(kw) OrElse
+                                                c.Kana.Contains(kw) OrElse
+                                                c.Email.Contains(kw) OrElse
+                                                c.Phone.Contains(kw))
+            End If
 
-                conn.Open()
-                Using reader As SqlDataReader = cmd.ExecuteReader()
-                    While reader.Read()
-                        Dim customer As Customer = MapCustomer(reader)
-                        customer.OrderCount = reader.GetInt32(9)
-                        customer.TotalAmount = reader.GetDecimal(10)
-                        result.Add(customer)
-                    End While
-                End Using
-            End Using
+            ' LEFT JOIN, GROUP BY
+            Dim rows = query.OrderBy(Function(c) c.CustomerId).Select(
+                Function(c) New With {
+                    .Customer = c,
+                    .OrderCount = c.Orders.Count(),
+                    .TotalAmount = c.Orders.Sum(Function(o) o.Quantity * o.UnitPrice)
+                }).ToList()
+
+            Dim result As New List(Of Customer)()
+            For Each r In rows
+                r.Customer.OrderCount = r.OrderCount
+                r.Customer.TotalAmount = r.TotalAmount
+                result.Add(r.Customer)
+            Next
+
+            Return result
         End Using
-
-        Return result
     End Function
 
     ''' <summary>
@@ -64,24 +64,9 @@ Public Class CustomerRepository
     ''' 顧客情報1件、存在しなければNothing
     ''' </returns>
     Public Function GetById(customerId As Integer) As Customer
-        Const sql As String =
-            "SELECT CustomerId, Name, Kana, Email, Phone, Address, Memo, CreatedAt, UpdatedAt " &
-            "FROM dbo.Customers WHERE CustomerId = @CustomerId"
-
-        Using conn As SqlConnection = CreateConnection()
-            Using cmd As New SqlCommand(sql, conn)
-                cmd.Parameters.Add("@CustomerId", SqlDbType.Int).Value = customerId
-
-                conn.Open()
-                Using reader As SqlDataReader = cmd.ExecuteReader()
-                    If reader.Read() Then
-                        Return MapCustomer(reader)
-                    End If
-                End Using
-            End Using
+        Using db As New AppDbContext(_connectionString)
+            Return db.Customers.AsNoTracking().FirstOrDefault(Function(c) c.CustomerId = customerId)
         End Using
-
-        Return Nothing
     End Function
 
     ''' <summary>
@@ -94,18 +79,20 @@ Public Class CustomerRepository
     ''' 顧客識別番号
     ''' </returns>
     Public Function Insert(customer As Customer) As Integer
-        Const sql As String =
-            "INSERT INTO dbo.Customers (Name, Kana, Email, Phone, Address, Memo) " &
-            "OUTPUT INSERTED.CustomerId " &
-            "VALUES (@Name, @Kana, @Email, @Phone, @Address, @Memo)"
+        Using db As New AppDbContext(_connectionString)
+            Dim entity As New Customer With {
+                .Name = customer.Name.Trim(),
+                .Kana = NullIfBlank(customer.Kana),
+                .Email = NullIfBlank(customer.Email),
+                .Phone = NullIfBlank(customer.Phone),
+                .Address = NullIfBlank(customer.Address),
+                .Memo = NullIfBlank(customer.Memo)
+            }
 
-        Using conn As SqlConnection = CreateConnection()
-            Using cmd As New SqlCommand(sql, conn)
-                AddCustomerParameters(cmd, customer)
+            db.Customers.Add(entity)
+            db.SaveChanges()
 
-                conn.Open()
-                Return Convert.ToInt32(cmd.ExecuteScalar())
-            End Using
+            Return entity.CustomerId
         End Using
     End Function
 
@@ -117,19 +104,22 @@ Public Class CustomerRepository
     ''' </param>
     ''' <returns></returns>
     Public Function Update(customer As Customer) As Boolean
-        Const sql As String =
-            "UPDATE dbo.Customers " &
-            "SET Name = @Name, Kana = @Kana, Email = @Email, Phone = @Phone, Address = @Address, Memo = @Memo, UpdatedAt = SYSDATETIME() " &
-            "WHERE CustomerId = @CustomerId"
+        Using db As New AppDbContext(_connectionString)
+            Dim entity As Customer = db.Customers.FirstOrDefault(Function(c) c.CustomerId = customer.CustomerId)
+            If entity Is Nothing Then
+                Return False
+            End If
 
-        Using conn As SqlConnection = CreateConnection()
-            Using cmd As New SqlCommand(sql, conn)
-                AddCustomerParameters(cmd, customer)
-                cmd.Parameters.Add("@CustomerId", SqlDbType.Int).Value = customer.CustomerId
+            entity.Name = customer.Name.Trim()
+            entity.Kana = NullIfBlank(customer.Kana)
+            entity.Email = NullIfBlank(customer.Email)
+            entity.Phone = NullIfBlank(customer.Phone)
+            entity.Address = NullIfBlank(customer.Address)
+            entity.Memo = NullIfBlank(customer.Memo)
+            entity.UpdatedAt = DateTime.Now
 
-                conn.Open()
-                Return cmd.ExecuteNonQuery() > 0
-            End Using
+            db.SaveChanges()
+            Return True
         End Using
     End Function
 
@@ -141,51 +131,16 @@ Public Class CustomerRepository
     ''' </param>
     ''' <returns></returns>
     Public Function Delete(customerId As Integer) As Boolean
-        Const sql As String =
-            "DELETE FROM dbo.Customers WHERE CustomerId = @CustomerId"
+        Using db As New AppDbContext(_connectionString)
+            Dim entity As Customer = db.Customers.Find(customerId)
+            If entity Is Nothing Then
+                Return False
+            End If
 
-        Using conn As SqlConnection = CreateConnection()
-            Using cmd As New SqlCommand(sql, conn)
-                cmd.Parameters.Add("@CustomerId", SqlDbType.Int).Value = customerId
-
-                conn.Open()
-                Return cmd.ExecuteNonQuery() > 0
-            End Using
+            db.Customers.Remove(entity)
+            db.SaveChanges()
+            Return True
         End Using
-    End Function
-
-    Private Shared Function GetString(reader As SqlDataReader, ordinal As Integer) As String
-        Return If(reader.IsDBNull(ordinal), String.Empty, reader.GetString(ordinal))
-    End Function
-
-    Private Shared Function MapCustomer(reader As SqlDataReader) As Customer
-        Return New Customer With {
-            .CustomerId = reader.GetInt32(0),
-            .Name = reader.GetString(1),
-            .Kana = GetString(reader, 2),
-            .Email = GetString(reader, 3),
-            .Phone = GetString(reader, 4),
-            .Address = GetString(reader, 5),
-            .Memo = GetString(reader, 6),
-            .CreatedAt = reader.GetDateTime(7),
-            .UpdatedAt = reader.GetDateTime(8)
-        }
-    End Function
-
-    Private Shared Sub AddCustomerParameters(cmd As SqlCommand, cusomer As Customer)
-        cmd.Parameters.Add("@Name", SqlDbType.NVarChar, 100).Value = cusomer.Name
-        cmd.Parameters.Add("@Kana", SqlDbType.NVarChar, 100).Value = ToDbValue(cusomer.Kana)
-        cmd.Parameters.Add("@Email", SqlDbType.NVarChar, 254).Value = ToDbValue(cusomer.Email)
-        cmd.Parameters.Add("@Phone", SqlDbType.NVarChar, 20).Value = ToDbValue(cusomer.Phone)
-        cmd.Parameters.Add("@Address", SqlDbType.NVarChar, 200).Value = ToDbValue(cusomer.Address)
-        cmd.Parameters.Add("@Memo", SqlDbType.NVarChar, 500).Value = ToDbValue(cusomer.Memo)
-    End Sub
-
-    Private Shared Function ToDbValue(value As String) As Object
-        If String.IsNullOrWhiteSpace(value) Then
-            Return DBNull.Value
-        End If
-        Return value.Trim()
     End Function
 
 End Class

@@ -14,6 +14,11 @@ Public Class Customer
     Public Property CreatedAt As DateTime
     Public Property UpdatedAt As DateTime
 
+    ''' <summary>
+    ''' 顧客=>注文のリレーション
+    ''' </summary>
+    Public Property Orders As List(Of CustomerOrder) = New List(Of CustomerOrder)()
+
     ' 表示専用(JOIN)
     Public Property OrderCount As Integer
     Public Property TotalAmount As Decimal

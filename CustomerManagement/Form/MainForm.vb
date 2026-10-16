@@ -1,4 +1,4 @@
-﻿Imports Microsoft.Data.SqlClient
+﻿Imports Microsoft.EntityFrameworkCore
 
 Public Class MainForm
 
@@ -63,8 +63,8 @@ Public Class MainForm
     Private Sub LoadCustomers()
         Try
             dgvCustomers.DataSource = _repo.GetAll(txtSearch.Text)
-        Catch ex As SqlException
-            MessageUtils.ShowError("顧客データの取得に失敗しました。", ex)
+        Catch ex As Exception
+            ShowError("顧客データの取得に失敗しました。", ex)
         End Try
     End Sub
 
@@ -140,7 +140,7 @@ Public Class MainForm
             If _currentId.HasValue Then
                 c.CustomerId = _currentId.Value
                 If Not _repo.Update(c) Then
-                    MessageUtils.ShowWarning("対象の顧客が見つかりませんでした。他で削除された可能性があります。", "更新できません")
+                    ShowWarning("対象の顧客が見つかりませんでした。他で削除された可能性があります。", "更新できません")
                 End If
             Else
                 _repo.Insert(c)
@@ -148,8 +148,8 @@ Public Class MainForm
 
             LoadCustomers()
             ClearForm()
-        Catch ex As SqlException
-            MessageUtils.ShowError("顧客データの保存に失敗しました。", ex)
+        Catch ex As Exception
+            ShowError("顧客データの保存に失敗しました。", ex)
         End Try
     End Sub
 
@@ -159,20 +159,20 @@ Public Class MainForm
     ''' <returns></returns>
     Private Function ValidateInput() As Boolean
         If String.IsNullOrWhiteSpace(txtName.Text) Then
-            MessageUtils.ShowWarning("名前を入力してください。", "入力エラー")
+            ShowWarning("名前を入力してください。", "入力エラー")
             txtName.Focus()
             Return False
         End If
 
         If txtName.Text.Trim().Length > 100 Then
-            MessageUtils.ShowWarning("名前は100文字以内で入力してください。", "入力エラー")
+            ShowWarning("名前は100文字以内で入力してください。", "入力エラー")
             txtName.Focus()
             Return False
         End If
 
         Dim email As String = txtEmail.Text.Trim()
         If email.Length > 0 AndAlso Not email.Contains("@") Then
-            MessageUtils.ShowWarning("メールアドレスの形式が正しくありません。", "入力エラー")
+            ShowWarning("メールアドレスの形式が正しくありません。", "入力エラー")
             txtEmail.Focus()
             Return False
         End If
@@ -185,11 +185,11 @@ Public Class MainForm
     ''' </summary>
     Private Sub btnDelete_Click(sender As Object, e As EventArgs) Handles btnDelete.Click
         If Not _currentId.HasValue Then
-            MessageUtils.ShowInformaion("削除する顧客を一覧から選択してください。", "削除")
+            ShowInformaion("削除する顧客を一覧から選択してください。", "削除")
             Return
         End If
 
-        Dim answer As DialogResult = MessageUtils.ShowYesNoDialog(
+        Dim answer As DialogResult = ShowYesNoDialog(
             $"{txtName.Text}を削除します。よろしいですか？", "削除の確認")
         If answer <> DialogResult.Yes Then
             Return
@@ -197,16 +197,18 @@ Public Class MainForm
 
         Try
             _repo.Delete(_currentId.Value)
-            LoadCustomers
-            ClearForm
-        Catch ex As SqlException
-            MessageUtils.ShowError("顧客データの削除に失敗しました。", ex)
+            LoadCustomers()
+            ClearForm()
+        Catch ex As DbUpdateException When IsForeignKeyViolation(ex)
+            ShowWarning($"この顧客には注文が登録されているため削除できません。{vbCrLf}さきに注文管理で注文を削除してください。", "削除できません。")
+        Catch ex As Exception
+            ShowError("顧客データの削除に失敗しました。", ex)
         End Try
     End Sub
 
     Private Sub btnOrders_Click(sender As Object, e As EventArgs) Handles btnOrders.Click
         If Not _currentId.HasValue Then
-            MessageUtils.ShowInformaion("注文を管理する顧客を一覧から選択してください。", "注文管理")
+            ShowInformaion("注文を管理する顧客を一覧から選択してください。", "注文管理")
             Return
         End If
 

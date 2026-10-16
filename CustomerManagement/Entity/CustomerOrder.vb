@@ -13,6 +13,11 @@ Public Class CustomerOrder
     Public Property CreatedAt As DateTime
     Public Property UpdatedAt As DateTime
 
+    ''' <summary>
+    ''' 注文=>顧客のリレーション
+    ''' </summary>
+    Public Property Customer As Customer
+
     Public ReadOnly Property Amount As Decimal
         Get
             Return Quantity * UnitPrice

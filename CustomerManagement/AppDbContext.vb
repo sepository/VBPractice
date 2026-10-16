@@ -1,0 +1,76 @@
+﻿Imports Microsoft.EntityFrameworkCore
+
+Public Class AppDbContext
+    Inherits DbContext
+
+    ''' <summary>
+    ''' データベースの接続文字列
+    ''' </summary>
+    Private ReadOnly _connectionString As String
+
+    ''' <summary>
+    ''' コンストラクタ
+    ''' </summary>
+    ''' <param name="connectionString">
+    ''' データベースの接続文字列
+    ''' </param>
+    Public Sub New(connectionString As String)
+        _connectionString = connectionString
+    End Sub
+
+    ''' <summary>
+    ''' 顧客情報
+    ''' </summary>
+    Public Property Customers As DbSet(Of Customer)
+    ''' <summary>
+    ''' 注文情報
+    ''' </summary>
+    Public Property Orders As DbSet(Of CustomerOrder)
+
+    Protected Overrides Sub OnConfiguring(optionsBuilder As DbContextOptionsBuilder)
+        optionsBuilder.UseSqlServer(_connectionString)
+
+#If DEBUG Then
+        optionsBuilder.LogTo(Sub(message) Debug.WriteLine(message), Microsoft.Extensions.Logging.LogLevel.Information)
+#End If
+    End Sub
+
+    Protected Overrides Sub OnModelCreating(modelBuilder As ModelBuilder)
+        ' 顧客
+        modelBuilder.Entity(Of Customer)(
+            Sub(e)
+                e.ToTable("Customers")
+                e.HasKey(Function(c) c.CustomerId)
+                e.Property(Function(c) c.Name).IsRequired.HasMaxLength(100)
+                e.Property(Function(c) c.Kana).HasMaxLength(100)
+                e.Property(Function(c) c.Email).HasMaxLength(254)
+                e.Property(Function(c) c.Phone).HasMaxLength(20)
+                e.Property(Function(c) c.Address).HasMaxLength(200)
+                e.Property(Function(c) c.Memo).HasMaxLength(500)
+                e.Property(Function(c) c.CreatedAt).HasColumnType("datetime2").HasDefaultValueSql("SYSDATETIME()")
+                e.Property(Function(c) c.UpdatedAt).HasColumnType("datetime2").HasDefaultValueSql("SYSDATETIME()")
+                e.Ignore(Function(c) c.OrderCount)
+                e.Ignore(Function(c) c.TotalAmount)
+            End Sub)
+
+        ' 注文
+        modelBuilder.Entity(Of CustomerOrder)(
+            Sub(e)
+                e.ToTable("Orders")
+                e.HasKey(Function(o) o.OrderId)
+                e.Property(Function(o) o.OrderDate).HasColumnType("date")
+                e.Property(Function(o) o.ProductName).IsRequired().HasMaxLength(100)
+                e.Property(Function(o) o.Quantity)
+                e.Property(Function(o) o.UnitPrice).HasColumnType("decimal(18,2)")
+                e.Property(Function(o) o.Note).HasMaxLength(500)
+                e.Property(Function(o) o.CreatedAt).HasColumnType("datetime2").HasDefaultValueSql("SYSDATETIME()")
+                e.Property(Function(o) o.UpdatedAt).HasColumnType("datetime2").HasDefaultValueSql("SYSDATETIME()")
+                e.Ignore(Function(o) o.Amount)
+                e.HasOne(Function(o) o.Customer) _
+                    .WithMany(Function(c) c.Orders) _
+                    .HasForeignKey(Function(o) o.CustomerId) _
+                    .OnDelete(DeleteBehavior.Restrict)
+            End Sub)
+    End Sub
+
+End Class

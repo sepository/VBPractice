@@ -1,4 +1,4 @@
-﻿Public Class MessageUtils
+﻿Public Module MessageUtils
 
     ''' <summary>
     ''' エラーメッセージ表示
@@ -9,7 +9,7 @@
     ''' <param name="ex">
     ''' 例外情報
     ''' </param>
-    Public Shared Sub ShowError(message As String, ex As Exception)
+    Public Sub ShowError(message As String, ex As Exception)
         MessageBox.Show(
             $"{message}{vbCrLf}{vbCrLf}{ex.Message}",
             "エラー",
@@ -27,7 +27,7 @@
     ''' <param name="title">
     ''' タイトル
     ''' </param>
-    Public Shared Sub ShowWarning(message As String, title As String)
+    Public Sub ShowWarning(message As String, title As String)
         MessageBox.Show(
             message,
             title,
@@ -45,7 +45,7 @@
     ''' <param name="title">
     ''' タイトル
     ''' </param>
-    Public Shared Sub ShowInformaion(message As String, title As String)
+    Public Sub ShowInformaion(message As String, title As String)
         MessageBox.Show(
             message,
             title,
@@ -66,7 +66,7 @@
     ''' <returns>
     ''' 選択結果（はい、いいえ）
     ''' </returns>
-    Public Shared Function ShowYesNoDialog(message As String, title As String)
+    Public Function ShowYesNoDialog(message As String, title As String)
         Return MessageBox.Show(
             message,
             title,
@@ -76,4 +76,4 @@
             )
     End Function
 
-End Class
+End Module

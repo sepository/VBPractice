@@ -1,6 +1,4 @@
-﻿Imports Microsoft.Data.SqlClient
-
-Public Class OrderForm
+﻿Public Class OrderForm
 
     Private ReadOnly _repo As New OrderRepository(AppConfig.ConnectionString)
 
@@ -105,8 +103,8 @@ Public Class OrderForm
 
             Dim total As Decimal = orders.Sum(Function(o) o.Amount)
             lblTotal.Text = $"{total:N0}円"
-        Catch ex As SqlException
-            MessageUtils.ShowError("注文データの取得に失敗しました。", ex)
+        Catch ex As Exception
+            ShowError("注文データの取得に失敗しました。", ex)
         End Try
     End Sub
 
@@ -150,7 +148,7 @@ Public Class OrderForm
     ''' </summary>
     Private Sub btnSave_Click(sender As Object, e As EventArgs) Handles btnSave.Click
         If String.IsNullOrWhiteSpace(txtProductName.Text) Then
-            MessageUtils.ShowWarning("商品名を入力してください。", "入力エラー")
+            ShowWarning("商品名を入力してください。", "入力エラー")
             txtProductName.Focus()
             Return
         End If
@@ -168,7 +166,7 @@ Public Class OrderForm
             If _currentOrderId.HasValue Then
                 o.OrderId = _currentOrderId.Value
                 If Not _repo.Update(o) Then
-                    MessageUtils.ShowWarning("対象の注文が見つかりませんでした。", "更新できません")
+                    ShowWarning("対象の注文が見つかりませんでした。", "更新できません")
                 End If
             Else
                 _repo.Insert(o)
@@ -176,8 +174,8 @@ Public Class OrderForm
 
             LoadOrders()
             ClearForm()
-        Catch ex As SqlException
-            MessageUtils.ShowError("注文データの保存に失敗しました。", ex)
+        Catch ex As Exception
+            ShowError("注文データの保存に失敗しました。", ex)
         End Try
     End Sub
 
@@ -186,11 +184,11 @@ Public Class OrderForm
     ''' </summary>
     Private Sub btnDelete_Click(sender As Object, e As EventArgs) Handles btnDelete.Click
         If Not _currentOrderId.HasValue Then
-            MessageUtils.ShowInformaion("削除する注文を一覧から選択してください。", "削除")
+            ShowInformaion("削除する注文を一覧から選択してください。", "削除")
             Return
         End If
 
-        Dim answer As DialogResult = MessageUtils.ShowYesNoDialog(
+        Dim answer As DialogResult = ShowYesNoDialog(
             $"{txtProductName.Text}の注文を削除します。よろしいですか？", "削除の確認")
         If answer <> DialogResult.Yes Then
             Return
@@ -200,8 +198,8 @@ Public Class OrderForm
             _repo.Delete(_currentOrderId.Value)
             LoadOrders()
             ClearForm()
-        Catch ex As SqlException
-            MessageUtils.ShowError("注文データの削除に失敗しました。", ex)
+        Catch ex As Exception
+            ShowError("注文データの削除に失敗しました。", ex)
         End Try
     End Sub
 

@@ -215,7 +215,7 @@ Partial Class OrderForm
         btnSave.Name = "btnSave"
         btnSave.Size = New Size(75, 23)
         btnSave.TabIndex = 18
-        btnSave.Text = "更新"
+        btnSave.Text = "保存"
         btnSave.UseVisualStyleBackColor = True
         ' 
         ' btnDelete

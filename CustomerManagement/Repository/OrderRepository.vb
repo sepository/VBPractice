@@ -1,10 +1,11 @@
-﻿Imports Microsoft.Data.SqlClient
+﻿Imports Microsoft.EntityFrameworkCore
 
 Public Class OrderRepository
-    Inherits Repository
+
+    Private ReadOnly _connectionString As String
 
     Public Sub New(connectionString As String)
-        MyBase.New(connectionString)
+        _connectionString = connectionString
     End Sub
 
     ''' <summary>
@@ -17,28 +18,13 @@ Public Class OrderRepository
     ''' 注文情報
     ''' </returns>
     Public Function GetByCustomerId(customerId As Integer) As List(Of CustomerOrder)
-        Const sql As String =
-            "SELECT OrderId, CustomerId, OrderDate, ProductName, Quantity, UnitPrice, Note, CreatedAt, UpdatedAt " &
-            "FROM dbo.Orders " &
-            "WHERE CustomerId = @CustomerId " &
-            "ORDER BY OrderDate DESC, OrderId DESC"
-
-        Dim result As New List(Of CustomerOrder)()
-
-        Using conn As SqlConnection = CreateConnection()
-            Using cmd As New SqlCommand(sql, conn)
-                cmd.Parameters.Add("@CustomerId", SqlDbType.Int).Value = customerId
-
-                conn.Open()
-                Using reader As SqlDataReader = cmd.ExecuteReader()
-                    While reader.Read()
-                        result.Add(MapOrder(reader))
-                    End While
-                End Using
-            End Using
+        Using db As New AppDbContext(_connectionString)
+            Return db.Orders.AsNoTracking().
+                Where(Function(o) o.CustomerId = customerId).
+                OrderByDescending(Function(o) o.OrderDate).
+                ThenByDescending(Function(o) o.OrderId).
+                ToList()
         End Using
-
-        Return result
     End Function
 
     ''' <summary>
@@ -51,19 +37,20 @@ Public Class OrderRepository
     ''' 注文ID
     ''' </returns>
     Public Function Insert(order As CustomerOrder) As Integer
-        Const sql As String =
-            "INSERT INTO dbo.Orders (CustomerId, OrderDate, ProductName, Quantity, UnitPrice, Note )" &
-            "OUTPUT INSERTED.OrderId " &
-            "VALUES (@CustomerId, @OrderDate, @ProductName, @Quantity, @UnitPrice, @Note)"
+        Using db As New AppDbContext(_connectionString)
+            Dim entity As New CustomerOrder With {
+                .CustomerId = order.CustomerId,
+                .OrderDate = order.OrderDate.Date,
+                .ProductName = order.ProductName.Trim(),
+                .Quantity = order.Quantity,
+                .UnitPrice = order.UnitPrice,
+                .Note = NullIfBlank(order.Note)
+            }
 
-        Using conn As SqlConnection = CreateConnection()
-            Using cmd As New SqlCommand(sql, conn)
-                AddOrderParameters(cmd, order)
-                cmd.Parameters.Add("@CustomerId", SqlDbType.Int).Value = order.CustomerId
+            db.Orders.Add(entity)
+            db.SaveChanges()
 
-                conn.Open()
-                Return Convert.ToInt32(cmd.ExecuteScalar())
-            End Using
+            Return entity.OrderId
         End Using
     End Function
 
@@ -77,21 +64,21 @@ Public Class OrderRepository
     ''' 成功 => True
     ''' </returns>
     Public Function Update(order As CustomerOrder) As Boolean
-        Const sql As String =
-            "UPDATE dbo.Orders " &
-            "SET " &
-            "OrderDate = @OrderDate, ProductName = @ProductName, Quantity = @Quantity, " &
-            "UnitPrice = @UnitPrice, Note = @Note, UpdatedAt = SYSDATETIME() " &
-            "WHERE OrderId = @OrderId"
+        Using db As New AppDbContext(_connectionString)
+            Dim entity As CustomerOrder = db.Orders.FirstOrDefault(Function(o) o.OrderId = order.OrderId)
+            If entity Is Nothing Then
+                Return False
+            End If
 
-        Using conn As SqlConnection = CreateConnection()
-            Using cmd As New SqlCommand(sql, conn)
-                AddOrderParameters(cmd, order)
-                cmd.Parameters.Add("@OrderId", SqlDbType.Int).Value = order.OrderId
+            entity.OrderDate = order.OrderDate.Date
+            entity.ProductName = order.ProductName.Trim()
+            entity.Quantity = order.Quantity
+            entity.UnitPrice = order.UnitPrice
+            entity.Note = NullIfBlank(order.Note)
+            entity.UpdatedAt = DateTime.Now
 
-                conn.Open()
-                Return cmd.ExecuteNonQuery() > 0
-            End Using
+            db.SaveChanges()
+            Return True
         End Using
     End Function
 
@@ -105,57 +92,16 @@ Public Class OrderRepository
     ''' 成功 => True
     ''' </returns>
     Public Function Delete(orderId As Integer) As Boolean
-        Const sql As String = "DELETE FROM dbo.Orders WHERE OrderId = @OrderId"
+        Using db As New AppDbContext(_connectionString)
+            Dim entity As CustomerOrder = db.Orders.Find(orderId)
+            If entity Is Nothing Then
+                Return False
+            End If
 
-        Using conn As SqlConnection = CreateConnection()
-            Using cmd As New SqlCommand(sql, conn)
-                cmd.Parameters.Add("@OrderId", SqlDbType.Int).Value = orderId
-
-                conn.Open()
-                Return cmd.ExecuteNonQuery() > 0
-            End Using
+            db.Orders.Remove(entity)
+            db.SaveChanges()
+            Return True
         End Using
-    End Function
-
-    ''' <summary>
-    ''' パラメータの一括セット
-    ''' </summary>
-    ''' <param name="cmd">
-    ''' SQLコマンド
-    ''' </param>
-    ''' <param name="order">
-    ''' 注文情報
-    ''' </param>
-    Private Shared Sub AddOrderParameters(cmd As SqlCommand, order As CustomerOrder)
-        cmd.Parameters.Add("@OrderDate", SqlDbType.Date).Value = order.OrderDate.Date
-        cmd.Parameters.Add("@ProductName", SqlDbType.NVarChar, 100).Value = order.ProductName.Trim()
-        cmd.Parameters.Add("@Quantity", SqlDbType.Int).Value = order.Quantity
-        Dim unitPrice As SqlParameter = cmd.Parameters.Add("@UnitPrice", SqlDbType.Decimal)
-        unitPrice.Precision = 18
-        unitPrice.Scale = 2
-        unitPrice.Value = order.UnitPrice
-        cmd.Parameters.Add("@Note", SqlDbType.NVarChar, 500).Value = ToDbValue(order.Note)
-    End Sub
-
-    Private Shared Function ToDbValue(value As String) As Object
-        If String.IsNullOrWhiteSpace(value) Then
-            Return DBNull.Value
-        End If
-        Return value.Trim()
-    End Function
-
-    Private Shared Function MapOrder(reader As SqlDataReader) As CustomerOrder
-        Return New CustomerOrder With {
-            .OrderId = reader.GetInt32(0),
-            .CustomerId = reader.GetInt32(1),
-            .OrderDate = reader.GetDateTime(2),
-            .ProductName = reader.GetString(3),
-            .Quantity = reader.GetInt32(4),
-            .UnitPrice = reader.GetDecimal(5),
-            .Note = If(reader.IsDBNull(6), String.Empty, reader.GetString(6)),
-            .CreatedAt = reader.GetDateTime(7),
-            .UpdatedAt = reader.GetDateTime(8)
-        }
     End Function
 
 End Class
