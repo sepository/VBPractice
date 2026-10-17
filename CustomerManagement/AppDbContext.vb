@@ -18,6 +18,8 @@ Public Class AppDbContext
         _connectionString = connectionString
     End Sub
 
+#Region "DbSet"
+
     ''' <summary>
     ''' 顧客情報
     ''' </summary>
@@ -30,6 +32,13 @@ Public Class AppDbContext
     ''' 注文明細
     ''' </summary>
     Public Property OrderItems As DbSet(Of OrderItem)
+    ''' <summary>
+    ''' 商品マスタ
+    ''' </summary>
+    Public Property Products As DbSet(Of Product)
+
+#End Region
+
 
     Protected Overrides Sub OnConfiguring(optionsBuilder As DbContextOptionsBuilder)
         optionsBuilder.UseSqlServer(_connectionString)
@@ -93,6 +102,25 @@ Public Class AppDbContext
                     .WithMany(Function(o) o.Items) _
                     .HasForeignKey(Function(i) i.OrderId) _
                     .OnDelete(DeleteBehavior.Cascade)
+
+                ' 商品 1 : 明細 多
+                ' Restrict => 注文明細があるなら、商品は削除できない。
+                e.HasOne(Function(i) i.Product) _
+                    .WithMany() _
+                    .HasForeignKey(Function(i) i.ProductId) _
+                    .OnDelete(DeleteBehavior.Restrict)
+            End Sub)
+
+        ' 商品マスタ
+        modelBuilder.Entity(Of Product)(
+            Sub(e)
+                e.ToTable("Products")
+                e.HasKey(Function(p) p.ProductId)
+                e.Property(Function(p) p.ProductCode).IsRequired().HasMaxLength(20)
+                e.Property(Function(p) p.Name).IsRequired().HasMaxLength(100)
+                e.Property(Function(p) p.CreatedAt).HasColumnType("datetime2").HasDefaultValueSql("SYSDATETIME()")
+                e.Property(Function(p) p.UpdatedAt).HasColumnType("datetime2").HasDefaultValueSql("SYSDATETIME()")
+                e.Ignore(Function(p) p.DisplayName)
             End Sub)
     End Sub
 

@@ -5,6 +5,7 @@ Public Class OrderItem
 
     Public Property OrderItemId As Integer
     Public Property OrderId As Integer
+    Public Property ProductId As Integer
     Public Property ProductName As String = String.Empty
     Public Property Quantity As Integer = 0
     Public Property UnitPrice As Decimal
@@ -13,6 +14,11 @@ Public Class OrderItem
     ''' 注文のナビゲーション
     ''' </summary>
     Public Property Order As CustomerOrder
+
+    ''' <summary>
+    ''' 商品のナビゲーション
+    ''' </summary>
+    Public Property Product As Product
 
     ''' <summary>
     ''' 金額（数量×単価）

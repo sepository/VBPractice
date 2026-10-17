@@ -6,9 +6,17 @@ Public Module DbHelper
     ''' <summary>
     ''' 保存・削除の失敗が外部キー制約違反かどうかを判定
     ''' </summary>
-    Public Function IsForeignKeyViolation(ex As DbUpdateConcurrencyException) As Boolean
+    Public Function IsForeignKeyViolation(ex As DbUpdateException) As Boolean
         Dim sqlEx As SqlException = TryCast(ex.InnerException, SqlException)
         Return sqlEx IsNot Nothing AndAlso sqlEx.Number = 547
+    End Function
+
+    ''' <summary>
+    ''' 一意制約違反かどうかを判定する
+    ''' </summary>
+    Public Function IsUniqueViolation(ex As DbUpdateException) As Boolean
+        Dim sqlEx As SqlException = TryCast(ex.InnerException, SqlException)
+        Return sqlEx IsNot Nothing AndAlso (sqlEx.Number = 2627 OrElse sqlEx.Number = 2601)
     End Function
 
     ''' <summary>

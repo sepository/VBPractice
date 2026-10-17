@@ -31,8 +31,6 @@ Partial Class OrderForm
         lblTotal = New Label()
         Label5 = New Label()
         dtpOrderDate = New DateTimePicker()
-        Label6 = New Label()
-        txtProductName = New TextBox()
         numQuantity = New NumericUpDown()
         Label7 = New Label()
         numUnitPrice = New NumericUpDown()
@@ -46,6 +44,8 @@ Partial Class OrderForm
         GroupBox1 = New GroupBox()
         GroupBox2 = New GroupBox()
         GroupBox3 = New GroupBox()
+        cboProduct = New ComboBox()
+        Label4 = New Label()
         lblItemTotal = New Label()
         Label10 = New Label()
         btnItemRemove = New Button()
@@ -143,25 +143,9 @@ Partial Class OrderForm
         dtpOrderDate.Size = New Size(100, 23)
         dtpOrderDate.TabIndex = 8
         ' 
-        ' Label6
-        ' 
-        Label6.AutoSize = True
-        Label6.Location = New Point(6, 201)
-        Label6.Name = "Label6"
-        Label6.Size = New Size(43, 15)
-        Label6.TabIndex = 9
-        Label6.Text = "商品名"
-        ' 
-        ' txtProductName
-        ' 
-        txtProductName.Location = New Point(55, 198)
-        txtProductName.Name = "txtProductName"
-        txtProductName.Size = New Size(188, 23)
-        txtProductName.TabIndex = 10
-        ' 
         ' numQuantity
         ' 
-        numQuantity.Location = New Point(286, 198)
+        numQuantity.Location = New Point(364, 220)
         numQuantity.Maximum = New Decimal(New Integer() {9999, 0, 0, 0})
         numQuantity.Minimum = New Decimal(New Integer() {1, 0, 0, 0})
         numQuantity.Name = "numQuantity"
@@ -173,7 +157,7 @@ Partial Class OrderForm
         ' Label7
         ' 
         Label7.AutoSize = True
-        Label7.Location = New Point(249, 201)
+        Label7.Location = New Point(327, 224)
         Label7.Name = "Label7"
         Label7.Size = New Size(31, 15)
         Label7.TabIndex = 12
@@ -181,7 +165,7 @@ Partial Class OrderForm
         ' 
         ' numUnitPrice
         ' 
-        numUnitPrice.Location = New Point(429, 198)
+        numUnitPrice.Location = New Point(507, 220)
         numUnitPrice.Maximum = New Decimal(New Integer() {99999999, 0, 0, 0})
         numUnitPrice.Name = "numUnitPrice"
         numUnitPrice.Size = New Size(100, 23)
@@ -191,7 +175,7 @@ Partial Class OrderForm
         ' Label8
         ' 
         Label8.AutoSize = True
-        Label8.Location = New Point(392, 200)
+        Label8.Location = New Point(470, 224)
         Label8.Name = "Label8"
         Label8.Size = New Size(31, 15)
         Label8.TabIndex = 14
@@ -217,7 +201,7 @@ Partial Class OrderForm
         ' 
         ' btnNew
         ' 
-        btnNew.Location = New Point(12, 564)
+        btnNew.Location = New Point(12, 579)
         btnNew.Name = "btnNew"
         btnNew.Size = New Size(75, 23)
         btnNew.TabIndex = 17
@@ -226,7 +210,7 @@ Partial Class OrderForm
         ' 
         ' btnSave
         ' 
-        btnSave.Location = New Point(93, 564)
+        btnSave.Location = New Point(93, 579)
         btnSave.Name = "btnSave"
         btnSave.Size = New Size(75, 23)
         btnSave.TabIndex = 18
@@ -235,7 +219,7 @@ Partial Class OrderForm
         ' 
         ' btnDelete
         ' 
-        btnDelete.Location = New Point(174, 564)
+        btnDelete.Location = New Point(174, 579)
         btnDelete.Name = "btnDelete"
         btnDelete.Size = New Size(75, 23)
         btnDelete.TabIndex = 19
@@ -244,7 +228,7 @@ Partial Class OrderForm
         ' 
         ' btnClose
         ' 
-        btnClose.Location = New Point(713, 564)
+        btnClose.Location = New Point(713, 579)
         btnClose.Name = "btnClose"
         btnClose.Size = New Size(75, 23)
         btnClose.TabIndex = 20
@@ -274,13 +258,15 @@ Partial Class OrderForm
         GroupBox2.Controls.Add(Label2)
         GroupBox2.Location = New Point(12, 233)
         GroupBox2.Name = "GroupBox2"
-        GroupBox2.Size = New Size(776, 325)
+        GroupBox2.Size = New Size(776, 340)
         GroupBox2.TabIndex = 22
         GroupBox2.TabStop = False
         GroupBox2.Text = "注文情報"
         ' 
         ' GroupBox3
         ' 
+        GroupBox3.Controls.Add(cboProduct)
+        GroupBox3.Controls.Add(Label4)
         GroupBox3.Controls.Add(lblItemTotal)
         GroupBox3.Controls.Add(Label10)
         GroupBox3.Controls.Add(btnItemRemove)
@@ -291,19 +277,35 @@ Partial Class OrderForm
         GroupBox3.Controls.Add(btnItemAdd)
         GroupBox3.Controls.Add(numUnitPrice)
         GroupBox3.Controls.Add(dgvItems)
-        GroupBox3.Controls.Add(Label6)
-        GroupBox3.Controls.Add(txtProductName)
         GroupBox3.Location = New Point(9, 83)
         GroupBox3.Name = "GroupBox3"
-        GroupBox3.Size = New Size(761, 234)
+        GroupBox3.Size = New Size(761, 251)
         GroupBox3.TabIndex = 17
         GroupBox3.TabStop = False
         GroupBox3.Text = "注文明細"
         ' 
+        ' cboProduct
+        ' 
+        cboProduct.DropDownStyle = ComboBoxStyle.DropDownList
+        cboProduct.FormattingEnabled = True
+        cboProduct.Location = New Point(43, 220)
+        cboProduct.Name = "cboProduct"
+        cboProduct.Size = New Size(278, 23)
+        cboProduct.TabIndex = 18
+        ' 
+        ' Label4
+        ' 
+        Label4.AutoSize = True
+        Label4.Location = New Point(6, 223)
+        Label4.Name = "Label4"
+        Label4.Size = New Size(31, 15)
+        Label4.TabIndex = 17
+        Label4.Text = "商品"
+        ' 
         ' lblItemTotal
         ' 
         lblItemTotal.BackColor = SystemColors.ControlLightLight
-        lblItemTotal.Location = New Point(572, 201)
+        lblItemTotal.Location = New Point(650, 224)
         lblItemTotal.Name = "lblItemTotal"
         lblItemTotal.Size = New Size(105, 15)
         lblItemTotal.TabIndex = 15
@@ -313,7 +315,7 @@ Partial Class OrderForm
         ' Label10
         ' 
         Label10.AutoSize = True
-        Label10.Location = New Point(535, 201)
+        Label10.Location = New Point(613, 223)
         Label10.Name = "Label10"
         Label10.Size = New Size(31, 15)
         Label10.TabIndex = 16
@@ -358,7 +360,7 @@ Partial Class OrderForm
         ' 
         AutoScaleDimensions = New SizeF(7F, 15F)
         AutoScaleMode = AutoScaleMode.Font
-        ClientSize = New Size(800, 595)
+        ClientSize = New Size(800, 614)
         Controls.Add(GroupBox2)
         Controls.Add(GroupBox1)
         Controls.Add(btnClose)
@@ -392,8 +394,6 @@ Partial Class OrderForm
     Friend WithEvents lblTotal As Label
     Friend WithEvents Label5 As Label
     Friend WithEvents dtpOrderDate As DateTimePicker
-    Friend WithEvents Label6 As Label
-    Friend WithEvents txtProductName As TextBox
     Friend WithEvents numQuantity As NumericUpDown
     Friend WithEvents Label7 As Label
     Friend WithEvents numUnitPrice As NumericUpDown
@@ -413,4 +413,6 @@ Partial Class OrderForm
     Friend WithEvents Label10 As Label
     Friend WithEvents btnItemRemove As Button
     Friend WithEvents btnItemUpdate As Button
+    Friend WithEvents cboProduct As ComboBox
+    Friend WithEvents Label4 As Label
 End Class

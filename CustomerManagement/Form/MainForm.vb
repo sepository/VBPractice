@@ -296,4 +296,13 @@ Public Class MainForm
         Next
     End Sub
 
+    ''' <summary>
+    ''' 商品マスタ
+    ''' </summary>
+    Private Sub btnProducts_Click(sender As Object, e As EventArgs) Handles btnProducts.Click
+        Using frm As New ProductForm()
+            frm.ShowDialog(Me)
+        End Using
+    End Sub
+
 End Class

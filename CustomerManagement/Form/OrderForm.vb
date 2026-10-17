@@ -3,6 +3,7 @@
 Public Class OrderForm
 
     Private ReadOnly _repo As New OrderRepository(AppConfig.ConnectionString)
+    Private ReadOnly _productRepo As New ProductRepository(AppConfig.ConnectionString)
 
     ''' <summary>
     ''' 顧客ID
@@ -19,6 +20,11 @@ Public Class OrderForm
     ''' Nothingの時は新規登録モード
     ''' </summary>
     Private _currentOrderId As Integer? = Nothing
+
+    ''' <summary>
+    ''' 販売中の商品
+    ''' </summary>
+    Private _activeProducts As New List(Of Product)()
 
     ''' <summary>
     ''' 編集中の注文明細
@@ -62,6 +68,7 @@ Public Class OrderForm
         SetupItemsGrid()
         SetBusy(True)
         Try
+            Await LoadProductsAsync()
             Await LoadOrdersAsync()
         Finally
             SetBusy(False)
@@ -173,6 +180,22 @@ Public Class OrderForm
     End Sub
 
     ''' <summary>
+    ''' 販売中の商品取得
+    ''' </summary>
+    Private Async Function LoadProductsAsync() As Task
+        Try
+            _activeProducts = Await _productRepo.GetActiveAsync()
+
+            cboProduct.DisplayMember = "DisplayName"
+            cboProduct.ValueMember = "ProductId"
+            cboProduct.DataSource = _activeProducts
+            cboProduct.SelectedIndex = -1
+        Catch ex As Exception
+            ShowError("商品データの取得に失敗しました。", ex)
+        End Try
+    End Function
+
+    ''' <summary>
     ''' 注文情報の取得
     ''' </summary>
     Private Async Function LoadOrdersAsync() As Task
@@ -207,6 +230,7 @@ Public Class OrderForm
         _items.Clear()
         For Each i As OrderItem In o.Items
             _items.Add(New OrderItem With {
+                       .ProductId = i.ProductId,
                        .ProductName = i.ProductName,
                        .Quantity = i.Quantity,
                        .UnitPrice = i.UnitPrice
@@ -230,9 +254,21 @@ Public Class OrderForm
             Return
         End If
 
-        txtProductName.Text = item.ProductName
+        cboProduct.SelectedIndex = _activeProducts.FindIndex(Function(p) p.ProductId = item.ProductId)
         numQuantity.Value = item.Quantity
         numUnitPrice.Value = item.UnitPrice
+    End Sub
+
+    ''' <summary>
+    ''' 商品選択時
+    ''' </summary>
+    Private Sub cboProduct_SelectionChangeCommitted(sender As Object, e As EventArgs) _
+        Handles cboProduct.SelectionChangeCommitted
+
+        Dim p As Product = TryCast(cboProduct.SelectedItem, Product)
+        If p IsNot Nothing Then
+            numUnitPrice.Value = p.UnitPrice
+        End If
     End Sub
 
     ''' <summary>
@@ -253,15 +289,19 @@ Public Class OrderForm
             Return
         End If
 
+        Dim p As Product = DirectCast(cboProduct.SelectedItem, Product)
+
+        ' 商品名と単価は、この時点の値を明細にコピーして持たせる(スナップショット)
         _items.Add(New OrderItem With {
-            .ProductName = txtProductName.Text.Trim(),
+            .ProductId = p.ProductId,
+            .ProductName = p.Name,
             .Quantity = CInt(numQuantity.Value),
             .UnitPrice = numUnitPrice.Value
         })
 
         ClearItemInput()
         UpdateOrderTotal()
-        txtProductName.Focus()
+        cboProduct.Focus()
     End Sub
 
     ''' <summary>
@@ -277,9 +317,12 @@ Public Class OrderForm
             Return
         End If
 
+        Dim p As Product = DirectCast(cboProduct.SelectedItem, Product)
+
         Dim index As Integer = dgvItems.SelectedRows(0).Index
         Dim item As OrderItem = _items(index)
-        item.ProductName = txtProductName.Text.Trim()
+        item.ProductId = p.ProductId
+        item.ProductName = p.Name
         item.Quantity = CInt(numQuantity.Value)
         item.UnitPrice = numUnitPrice.Value
 
@@ -309,15 +352,9 @@ Public Class OrderForm
     ''' 明細の入力チェック
     ''' </summary>
     Private Function ValidateItemInput() As Boolean
-        If String.IsNullOrWhiteSpace(txtProductName.Text) Then
-            ShowWarning("商品名を入力してください。", "入力エラー")
-            txtProductName.Focus()
-            Return False
-        End If
-
-        If txtProductName.Text.Trim().Length > 100 Then
-            ShowWarning("商品名は100文字以内で入力してください。", "入力エラー")
-            txtProductName.Focus()
+        If cboProduct.SelectedItem Is Nothing Then
+            ShowWarning("商品を選択してください。(販売停止の商品は選べません)", "入力エラー")
+            cboProduct.Focus()
             Return False
         End If
 
@@ -328,7 +365,7 @@ Public Class OrderForm
     ''' 明細のクリア
     ''' </summary>
     Private Sub ClearItemInput()
-        txtProductName.Clear()
+        cboProduct.SelectedIndex = -1
         numQuantity.Value = 1
         numUnitPrice.Value = 0
         dgvItems.ClearSelection()
@@ -348,7 +385,7 @@ Public Class OrderForm
     ''' </summary>
     Private Sub btnNew_Click(sender As Object, e As EventArgs) Handles btnNew.Click
         ClearForm()
-        txtProductName.Focus()
+        cboProduct.Focus()
     End Sub
 
     ''' <summary>
@@ -357,7 +394,7 @@ Public Class OrderForm
     Private Async Sub btnSave_Click(sender As Object, e As EventArgs) Handles btnSave.Click
         If _items.Count = 0 Then
             ShowWarning("明細を1行以上追加してください。", "入力エラー")
-            txtProductName.Focus()
+            cboProduct.Focus()
             Return
         End If
 

@@ -47,6 +47,7 @@ Public Class OrderRepository
 
             For Each item As OrderItem In order.Items
                 entity.Items.Add(New OrderItem With {
+                    .ProductId = item.ProductId,
                     .ProductName = item.ProductName.Trim(),
                     .Quantity = item.Quantity,
                     .UnitPrice = item.UnitPrice
@@ -91,6 +92,7 @@ Public Class OrderRepository
                 For Each item As OrderItem In order.Items
                     db.OrderItems.Add(New OrderItem With {
                         .OrderId = orderId,
+                        .ProductId = item.ProductId,
                         .ProductName = item.ProductName.Trim(),
                         .Quantity = item.Quantity,
                         .UnitPrice = item.UnitPrice

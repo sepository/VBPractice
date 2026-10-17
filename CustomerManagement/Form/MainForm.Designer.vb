@@ -32,6 +32,7 @@ Partial Class MainForm
         txtKana = New TextBox()
         GroupBox1 = New GroupBox()
         GroupBox2 = New GroupBox()
+        btnOrders = New Button()
         txtAddress = New TextBox()
         Label7 = New Label()
         txtMemo = New TextBox()
@@ -43,7 +44,7 @@ Partial Class MainForm
         btnNew = New Button()
         btnSave = New Button()
         btnDelete = New Button()
-        btnOrders = New Button()
+        btnProducts = New Button()
         CType(dgvCustomers, ComponentModel.ISupportInitialize).BeginInit()
         GroupBox1.SuspendLayout()
         GroupBox2.SuspendLayout()
@@ -128,6 +129,7 @@ Partial Class MainForm
         ' 
         ' GroupBox2
         ' 
+        GroupBox2.Controls.Add(btnProducts)
         GroupBox2.Controls.Add(btnOrders)
         GroupBox2.Controls.Add(txtAddress)
         GroupBox2.Controls.Add(Label7)
@@ -147,6 +149,15 @@ Partial Class MainForm
         GroupBox2.TabIndex = 1
         GroupBox2.TabStop = False
         GroupBox2.Text = "入力"
+        ' 
+        ' btnOrders
+        ' 
+        btnOrders.Location = New Point(298, 138)
+        btnOrders.Name = "btnOrders"
+        btnOrders.Size = New Size(75, 23)
+        btnOrders.TabIndex = 5
+        btnOrders.Text = "注文管理"
+        btnOrders.UseVisualStyleBackColor = True
         ' 
         ' txtAddress
         ' 
@@ -240,14 +251,14 @@ Partial Class MainForm
         btnDelete.Text = "削除"
         btnDelete.UseVisualStyleBackColor = True
         ' 
-        ' btnOrders
+        ' btnProducts
         ' 
-        btnOrders.Location = New Point(298, 138)
-        btnOrders.Name = "btnOrders"
-        btnOrders.Size = New Size(75, 23)
-        btnOrders.TabIndex = 5
-        btnOrders.Text = "注文管理"
-        btnOrders.UseVisualStyleBackColor = True
+        btnProducts.Location = New Point(379, 138)
+        btnProducts.Name = "btnProducts"
+        btnProducts.Size = New Size(75, 23)
+        btnProducts.TabIndex = 17
+        btnProducts.Text = "商品マスタ"
+        btnProducts.UseVisualStyleBackColor = True
         ' 
         ' MainForm
         ' 
@@ -292,5 +303,6 @@ Partial Class MainForm
     Friend WithEvents txtAddress As TextBox
     Friend WithEvents Label7 As Label
     Friend WithEvents btnOrders As Button
+    Friend WithEvents btnProducts As Button
 
 End Class
