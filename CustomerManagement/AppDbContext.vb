@@ -26,6 +26,10 @@ Public Class AppDbContext
     ''' 注文情報
     ''' </summary>
     Public Property Orders As DbSet(Of CustomerOrder)
+    ''' <summary>
+    ''' 注文明細
+    ''' </summary>
+    Public Property OrderItems As DbSet(Of OrderItem)
 
     Protected Overrides Sub OnConfiguring(optionsBuilder As DbContextOptionsBuilder)
         optionsBuilder.UseSqlServer(_connectionString)
@@ -59,17 +63,36 @@ Public Class AppDbContext
                 e.ToTable("Orders")
                 e.HasKey(Function(o) o.OrderId)
                 e.Property(Function(o) o.OrderDate).HasColumnType("date")
-                e.Property(Function(o) o.ProductName).IsRequired().HasMaxLength(100)
-                e.Property(Function(o) o.Quantity)
-                e.Property(Function(o) o.UnitPrice).HasColumnType("decimal(18,2)")
                 e.Property(Function(o) o.Note).HasMaxLength(500)
                 e.Property(Function(o) o.CreatedAt).HasColumnType("datetime2").HasDefaultValueSql("SYSDATETIME()")
                 e.Property(Function(o) o.UpdatedAt).HasColumnType("datetime2").HasDefaultValueSql("SYSDATETIME()")
                 e.Ignore(Function(o) o.Amount)
+                e.Ignore(Function(o) o.ItemCount)
+                e.Ignore(Function(o) o.Summary)
+
+                ' 顧客 1 : 注文 多
+                ' Restrict => 注文があるなら、顧客は削除できない
                 e.HasOne(Function(o) o.Customer) _
                     .WithMany(Function(c) c.Orders) _
                     .HasForeignKey(Function(o) o.CustomerId) _
                     .OnDelete(DeleteBehavior.Restrict)
+            End Sub)
+
+        ' 注文明細
+        modelBuilder.Entity(Of OrderItem)(
+            Sub(e)
+                e.ToTable("OrderItems")
+                e.HasKey(Function(i) i.OrderItemId)
+                e.Property(Function(i) i.ProductName).IsRequired().HasMaxLength(100)
+                e.Property(Function(i) i.UnitPrice).HasColumnType("decimal(18,2)")
+                e.Ignore(Function(i) i.Amount)
+
+                ' 注文 1 : 明細 多
+                ' Cascade => 注文を削除したら、明細も削除
+                e.HasOne(Function(i) i.Order) _
+                    .WithMany(Function(o) o.Items) _
+                    .HasForeignKey(Function(i) i.OrderId) _
+                    .OnDelete(DeleteBehavior.Cascade)
             End Sub)
     End Sub
 

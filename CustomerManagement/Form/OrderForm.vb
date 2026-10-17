@@ -1,4 +1,6 @@
-﻿Public Class OrderForm
+﻿Imports System.ComponentModel
+
+Public Class OrderForm
 
     Private ReadOnly _repo As New OrderRepository(AppConfig.ConnectionString)
 
@@ -17,6 +19,11 @@
     ''' Nothingの時は新規登録モード
     ''' </summary>
     Private _currentOrderId As Integer? = Nothing
+
+    ''' <summary>
+    ''' 編集中の注文明細
+    ''' </summary>
+    Private ReadOnly _items As New BindingList(Of OrderItem)
 
     ''' <summary>
     ''' DBアクセス中、二重処理や画面終了を防ぐ。
@@ -52,6 +59,7 @@
         Text = $"注文管理 - {_customerName}"
         lblCustomer.Text = $"{_customerName}(ID:{_customerId})"
         SetupGrid()
+        SetupItemsGrid()
         SetBusy(True)
         Try
             Await LoadOrdersAsync()
@@ -87,9 +95,47 @@
                          .HeaderText = "ID",
                          .Width = 50})
             .Columns.Add(New DataGridViewTextBoxColumn With {
+                         .DataPropertyName = "OrderDate",
+                         .HeaderText = "注文日",
+                         .Width = 100,
+                         .DefaultCellStyle = New DataGridViewCellStyle With {.Format = "yyyy/MM/dd"}})
+            .Columns.Add(New DataGridViewTextBoxColumn With {
+                         .DataPropertyName = "Summary",
+                         .HeaderText = "内容",
+                         .Width = 200})
+            .Columns.Add(New DataGridViewTextBoxColumn With {
+                         .DataPropertyName = "ItemCount",
+                         .HeaderText = "明細数",
+                         .Width = 60,
+                         .DefaultCellStyle = New DataGridViewCellStyle With {.Alignment = DataGridViewContentAlignment.MiddleRight}})
+            .Columns.Add(New DataGridViewTextBoxColumn With {
+                         .DataPropertyName = "Amount",
+                         .HeaderText = "金額",
+                         .Width = 100,
+                         .DefaultCellStyle = rightAligned})
+            .ReadOnly = True
+            .AllowUserToAddRows = False
+            .MultiSelect = False
+            .SelectionMode = DataGridViewSelectionMode.FullRowSelect
+        End With
+    End Sub
+
+    ''' <summary>
+    ''' 明細グリッドの初期化
+    ''' </summary>
+    Private Sub SetupItemsGrid()
+        Dim rightAligned As New DataGridViewCellStyle With {
+            .Format = "N0",
+            .Alignment = DataGridViewContentAlignment.MiddleRight
+        }
+
+        With dgvItems
+            .AutoGenerateColumns = False
+            .Columns.Clear()
+            .Columns.Add(New DataGridViewTextBoxColumn With {
                          .DataPropertyName = "ProductName",
                          .HeaderText = "商品名",
-                         .Width = 180})
+                         .Width = 200})
             .Columns.Add(New DataGridViewTextBoxColumn With {
                          .DataPropertyName = "Quantity",
                          .HeaderText = "数量",
@@ -109,6 +155,7 @@
             .AllowUserToAddRows = False
             .MultiSelect = False
             .SelectionMode = DataGridViewSelectionMode.FullRowSelect
+            .DataSource = _items
         End With
     End Sub
 
@@ -120,7 +167,7 @@
         UseWaitCursor = busy
 
         For Each ctrl As Control In New Control() {
-            dgvOrders, btnNew, btnSave, btnDelete, btnClose}
+            dgvOrders, dgvItems, btnItemAdd, btnItemUpdate, btnItemRemove, btnNew, btnSave, btnDelete, btnClose}
             ctrl.Enabled = Not busy
         Next
     End Sub
@@ -144,27 +191,156 @@
     ''' 選択した行の情報を表示
     ''' </summary>
     Private Sub dgvOrders_SelectionChanged(sender As Object, e As EventArgs) Handles dgvOrders.SelectionChanged
-        If dgvOrders.CurrentRow Is Nothing Then Return
+        If dgvOrders.CurrentRow Is Nothing Then
+            Return
+        End If
 
         Dim o As CustomerOrder = TryCast(dgvOrders.CurrentRow.DataBoundItem, CustomerOrder)
-        If o Is Nothing Then Return
+        If o Is Nothing Then
+            Return
+        End If
 
         _currentOrderId = o.OrderId
         dtpOrderDate.Value = o.OrderDate
-        txtProductName.Text = o.ProductName
-        numQuantity.Value = o.Quantity
-        numUnitPrice.Value = o.UnitPrice
         txtNote.Text = o.Note
+
+        _items.Clear()
+        For Each i As OrderItem In o.Items
+            _items.Add(New OrderItem With {
+                       .ProductName = i.ProductName,
+                       .Quantity = i.Quantity,
+                       .UnitPrice = i.UnitPrice
+            })
+        Next
+
+        ClearItemInput()
+        UpdateOrderTotal()
     End Sub
 
     ''' <summary>
-    ''' 小計
+    ''' 明細の行選択
+    ''' </summary>
+    Private Sub dgvItems_SelectionChanged(sender As Object, e As EventArgs) Handles dgvItems.SelectionChanged
+        If dgvItems.SelectedRows.Count = 0 Then
+            Return
+        End If
+
+        Dim item As OrderItem = TryCast(dgvItems.SelectedRows(0).DataBoundItem, OrderItem)
+        If item Is Nothing Then
+            Return
+        End If
+
+        txtProductName.Text = item.ProductName
+        numQuantity.Value = item.Quantity
+        numUnitPrice.Value = item.UnitPrice
+    End Sub
+
+    ''' <summary>
+    ''' 明細の金額
     ''' </summary>
     Private Sub AmountInput_ValueChanged(sender As Object, e As EventArgs) _
         Handles numQuantity.ValueChanged, numUnitPrice.ValueChanged
 
         Dim amount As Decimal = numQuantity.Value * numUnitPrice.Value
-        lblAmount.Text = $"{amount:N0}円"
+        lblItemTotal.Text = $"{amount:N0}円"
+    End Sub
+
+    ''' <summary>
+    ''' 明細の追加
+    ''' </summary>
+    Private Sub btnItemAdd_Click(sender As Object, e As EventArgs) Handles btnItemAdd.Click
+        If Not ValidateItemInput() Then
+            Return
+        End If
+
+        _items.Add(New OrderItem With {
+            .ProductName = txtProductName.Text.Trim(),
+            .Quantity = CInt(numQuantity.Value),
+            .UnitPrice = numUnitPrice.Value
+        })
+
+        ClearItemInput()
+        UpdateOrderTotal()
+        txtProductName.Focus()
+    End Sub
+
+    ''' <summary>
+    ''' 明細の更新
+    ''' </summary>
+    Private Sub btnItemUpdate_Click(sender As Object, e As EventArgs) Handles btnItemUpdate.Click
+        If dgvItems.SelectedRows.Count = 0 Then
+            ShowInformaion("更新する明細を一覧から選択してください。", "明細の更新")
+            Return
+        End If
+
+        If Not ValidateItemInput() Then
+            Return
+        End If
+
+        Dim index As Integer = dgvItems.SelectedRows(0).Index
+        Dim item As OrderItem = _items(index)
+        item.ProductName = txtProductName.Text.Trim()
+        item.Quantity = CInt(numQuantity.Value)
+        item.UnitPrice = numUnitPrice.Value
+
+        ' 中身を書き換えただけでは画面に反映されないので、再描画する
+        _items.ResetItem(index)
+
+        ClearItemInput()
+        UpdateOrderTotal()
+    End Sub
+
+    ''' <summary>
+    ''' 明細の削除
+    ''' </summary>
+    Private Sub btnItemRemove_Click(sener As Object, e As EventArgs) Handles btnItemRemove.Click
+        If dgvItems.SelectedRows.Count = 0 Then
+            ShowInformaion("削除する明細を一覧から選択してください。", "明細の削除")
+            Return
+        End If
+
+        _items.RemoveAt(dgvItems.SelectedRows(0).Index)
+
+        ClearItemInput()
+        UpdateOrderTotal()
+    End Sub
+
+    ''' <summary>
+    ''' 明細の入力チェック
+    ''' </summary>
+    Private Function ValidateItemInput() As Boolean
+        If String.IsNullOrWhiteSpace(txtProductName.Text) Then
+            ShowWarning("商品名を入力してください。", "入力エラー")
+            txtProductName.Focus()
+            Return False
+        End If
+
+        If txtProductName.Text.Trim().Length > 100 Then
+            ShowWarning("商品名は100文字以内で入力してください。", "入力エラー")
+            txtProductName.Focus()
+            Return False
+        End If
+
+        Return True
+    End Function
+
+    ''' <summary>
+    ''' 明細のクリア
+    ''' </summary>
+    Private Sub ClearItemInput()
+        txtProductName.Clear()
+        numQuantity.Value = 1
+        numUnitPrice.Value = 0
+        dgvItems.ClearSelection()
+        AmountInput_ValueChanged(Me, EventArgs.Empty)
+    End Sub
+
+    ''' <summary>
+    ''' 注文の合計金額
+    ''' </summary>
+    Private Sub UpdateOrderTotal()
+        Dim total As Decimal = _items.Sum(Function(i) i.Amount)
+        lblOrderTotal.Text = $"{total:N0}円"
     End Sub
 
     ''' <summary>
@@ -179,20 +355,19 @@
     ''' 保存
     ''' </summary>
     Private Async Sub btnSave_Click(sender As Object, e As EventArgs) Handles btnSave.Click
-        If String.IsNullOrWhiteSpace(txtProductName.Text) Then
-            ShowWarning("商品名を入力してください。", "入力エラー")
+        If _items.Count = 0 Then
+            ShowWarning("明細を1行以上追加してください。", "入力エラー")
             txtProductName.Focus()
             Return
         End If
 
+        ' 入力値は、Awaitに入る前にオブジェクトに取り込んでおく
         Dim o As New CustomerOrder With {
             .CustomerId = _customerId,
             .OrderDate = dtpOrderDate.Value.Date,
-            .ProductName = txtProductName.Text,
-            .Quantity = CInt(numQuantity.Value),
-            .UnitPrice = numUnitPrice.Value,
             .Note = txtNote.Text
         }
+        o.Items.AddRange(_items)
         Dim editingId As Integer? = _currentOrderId
 
         SetBusy(True)
@@ -225,7 +400,9 @@
         End If
 
         Dim answer As DialogResult = ShowYesNoDialog(
-            $"{txtProductName.Text}の注文を削除します。よろしいですか？", "削除の確認")
+            $"{dtpOrderDate.Value:yyyy/MM/dd}の注文を削除します。{vbCrLf}" &
+            $"明細({_items.Count}行)もすべて削除されます。よろしいですか？",
+            "削除の確認")
         If answer <> DialogResult.Yes Then
             Return
         End If
@@ -258,11 +435,10 @@
         dgvOrders.ClearSelection()
         _currentOrderId = Nothing
         dtpOrderDate.Value = DateTime.Today
-        txtProductName.Clear()
-        numQuantity.Value = 1
-        numUnitPrice.Value = 0
         txtNote.Clear()
-        AmountInput_ValueChanged(Me, EventArgs.Empty)
+        _items.Clear()
+        ClearItemInput()
+        UpdateOrderTotal()
     End Sub
 
 End Class

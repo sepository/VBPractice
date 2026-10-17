@@ -35,18 +35,31 @@ Public Class CustomerRepository
                                                 c.Phone.Contains(kw))
             End If
 
-            ' LEFT JOIN, GROUP BY
+            ' 顧客、顧客毎の注文数を取得
             Dim rows = Await query.OrderBy(Function(c) c.CustomerId).Select(
                 Function(c) New With {
                     .Customer = c,
-                    .OrderCount = c.Orders.Count(),
-                    .TotalAmount = c.Orders.Sum(Function(o) o.Quantity * o.UnitPrice)
+                    .OrderCount = c.Orders.Count()
                 }).ToListAsync()
+
+            ' 顧客毎の注文金額合計を取得
+            Dim totals = Await db.OrderItems.AsNoTracking().
+                GroupBy(Function(i) i.Order.CustomerId).
+                Select(Function(g) New With {
+                    .CustomerId = g.Key,
+                    .Total = g.Sum(Function(i) i.Quantity * i.UnitPrice)
+                }).ToListAsync()
+            Dim totalByCutomer As Dictionary(Of Integer, Decimal) =
+                totals.ToDictionary(Function(t) t.CustomerId, Function(t) t.Total)
 
             Dim result As New List(Of Customer)()
             For Each r In rows
                 r.Customer.OrderCount = r.OrderCount
-                r.Customer.TotalAmount = r.TotalAmount
+
+                Dim total As Decimal = 0D
+                totalByCutomer.TryGetValue(r.Customer.CustomerId, total)
+                r.Customer.TotalAmount = total
+
                 result.Add(r.Customer)
             Next
 

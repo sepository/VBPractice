@@ -20,6 +20,7 @@ Public Class OrderRepository
     Public Async Function GetByCustomerIdAsync(customerId As Integer) As Task(Of List(Of CustomerOrder))
         Using db As New AppDbContext(_connectionString)
             Return Await db.Orders.AsNoTracking().
+                Include(Function(o) o.Items).
                 Where(Function(o) o.CustomerId = customerId).
                 OrderByDescending(Function(o) o.OrderDate).
                 ThenByDescending(Function(o) o.OrderId).
@@ -41,11 +42,16 @@ Public Class OrderRepository
             Dim entity As New CustomerOrder With {
                 .CustomerId = order.CustomerId,
                 .OrderDate = order.OrderDate.Date,
-                .ProductName = order.ProductName.Trim(),
-                .Quantity = order.Quantity,
-                .UnitPrice = order.UnitPrice,
                 .Note = NullIfBlank(order.Note)
             }
+
+            For Each item As OrderItem In order.Items
+                entity.Items.Add(New OrderItem With {
+                    .ProductName = item.ProductName.Trim(),
+                    .Quantity = item.Quantity,
+                    .UnitPrice = item.UnitPrice
+                })
+            Next
 
             db.Orders.Add(entity)
             Await db.SaveChangesAsync()
@@ -65,20 +71,36 @@ Public Class OrderRepository
     ''' </returns>
     Public Async Function UpdateAsync(order As CustomerOrder) As Task(Of Boolean)
         Using db As New AppDbContext(_connectionString)
-            Dim entity As CustomerOrder = db.Orders.FirstOrDefault(Function(o) o.OrderId = order.OrderId)
-            If entity Is Nothing Then
-                Return False
-            End If
+            Dim orderId As Integer = order.OrderId
 
-            entity.OrderDate = order.OrderDate.Date
-            entity.ProductName = order.ProductName.Trim()
-            entity.Quantity = order.Quantity
-            entity.UnitPrice = order.UnitPrice
-            entity.Note = NullIfBlank(order.Note)
-            entity.UpdatedAt = DateTime.Now
+            ' 明示的なトランザクション開始
+            Using tx = Await db.Database.BeginTransactionAsync()
+                Dim entity As CustomerOrder = db.Orders.FirstOrDefault(Function(o) o.OrderId = order.OrderId)
+                If entity Is Nothing Then
+                    Return False
+                End If
 
-            Await db.SaveChangesAsync()
-            Return True
+                entity.OrderDate = order.OrderDate.Date
+                entity.Note = NullIfBlank(order.Note)
+                entity.UpdatedAt = DateTime.Now
+
+                ' 古い明細を一括削除する。
+                Await db.OrderItems.Where(Function(i) i.OrderId = orderId).ExecuteDeleteAsync()
+
+                ' 新しい明細を追加する。
+                For Each item As OrderItem In order.Items
+                    db.OrderItems.Add(New OrderItem With {
+                        .OrderId = orderId,
+                        .ProductName = item.ProductName.Trim(),
+                        .Quantity = item.Quantity,
+                        .UnitPrice = item.UnitPrice
+                    })
+                Next
+
+                Await db.SaveChangesAsync()
+                Await tx.CommitAsync()
+                Return True
+            End Using
         End Using
     End Function
 

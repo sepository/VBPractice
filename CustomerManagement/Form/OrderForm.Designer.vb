@@ -25,7 +25,7 @@ Partial Class OrderForm
         Label1 = New Label()
         lblCustomer = New Label()
         dgvOrders = New DataGridView()
-        lblAmount = New Label()
+        lblOrderTotal = New Label()
         Label2 = New Label()
         Label3 = New Label()
         lblTotal = New Label()
@@ -43,9 +43,22 @@ Partial Class OrderForm
         btnSave = New Button()
         btnDelete = New Button()
         btnClose = New Button()
+        GroupBox1 = New GroupBox()
+        GroupBox2 = New GroupBox()
+        GroupBox3 = New GroupBox()
+        lblItemTotal = New Label()
+        Label10 = New Label()
+        btnItemRemove = New Button()
+        btnItemUpdate = New Button()
+        btnItemAdd = New Button()
+        dgvItems = New DataGridView()
         CType(dgvOrders, ComponentModel.ISupportInitialize).BeginInit()
         CType(numQuantity, ComponentModel.ISupportInitialize).BeginInit()
         CType(numUnitPrice, ComponentModel.ISupportInitialize).BeginInit()
+        GroupBox1.SuspendLayout()
+        GroupBox2.SuspendLayout()
+        GroupBox3.SuspendLayout()
+        CType(dgvItems, ComponentModel.ISupportInitialize).BeginInit()
         SuspendLayout()
         ' 
         ' Label1
@@ -70,34 +83,34 @@ Partial Class OrderForm
         ' dgvOrders
         ' 
         dgvOrders.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize
-        dgvOrders.Location = New Point(12, 27)
+        dgvOrders.Location = New Point(6, 22)
         dgvOrders.Name = "dgvOrders"
-        dgvOrders.Size = New Size(776, 150)
+        dgvOrders.Size = New Size(764, 150)
         dgvOrders.TabIndex = 2
         ' 
-        ' lblAmount
+        ' lblOrderTotal
         ' 
-        lblAmount.BackColor = SystemColors.ControlLightLight
-        lblAmount.Location = New Point(49, 180)
-        lblAmount.Name = "lblAmount"
-        lblAmount.Size = New Size(105, 15)
-        lblAmount.TabIndex = 3
-        lblAmount.Text = "99999999"
-        lblAmount.TextAlign = ContentAlignment.TopRight
+        lblOrderTotal.BackColor = SystemColors.ControlLightLight
+        lblOrderTotal.Location = New Point(58, 62)
+        lblOrderTotal.Name = "lblOrderTotal"
+        lblOrderTotal.Size = New Size(105, 15)
+        lblOrderTotal.TabIndex = 3
+        lblOrderTotal.Text = "99999999"
+        lblOrderTotal.TextAlign = ContentAlignment.TopRight
         ' 
         ' Label2
         ' 
         Label2.AutoSize = True
-        Label2.Location = New Point(12, 180)
+        Label2.Location = New Point(9, 62)
         Label2.Name = "Label2"
-        Label2.Size = New Size(31, 15)
+        Label2.Size = New Size(43, 15)
         Label2.TabIndex = 4
-        Label2.Text = "小計"
+        Label2.Text = "注文額"
         ' 
         ' Label3
         ' 
         Label3.AutoSize = True
-        Label3.Location = New Point(12, 195)
+        Label3.Location = New Point(6, 175)
         Label3.Name = "Label3"
         Label3.Size = New Size(31, 15)
         Label3.TabIndex = 5
@@ -106,7 +119,7 @@ Partial Class OrderForm
         ' lblTotal
         ' 
         lblTotal.BackColor = SystemColors.ControlLightLight
-        lblTotal.Location = New Point(49, 195)
+        lblTotal.Location = New Point(43, 175)
         lblTotal.Name = "lblTotal"
         lblTotal.Size = New Size(105, 15)
         lblTotal.TabIndex = 6
@@ -116,7 +129,7 @@ Partial Class OrderForm
         ' Label5
         ' 
         Label5.AutoSize = True
-        Label5.Location = New Point(12, 232)
+        Label5.Location = New Point(9, 25)
         Label5.Name = "Label5"
         Label5.Size = New Size(43, 15)
         Label5.TabIndex = 7
@@ -125,7 +138,7 @@ Partial Class OrderForm
         ' dtpOrderDate
         ' 
         dtpOrderDate.Format = DateTimePickerFormat.Short
-        dtpOrderDate.Location = New Point(61, 229)
+        dtpOrderDate.Location = New Point(58, 22)
         dtpOrderDate.Name = "dtpOrderDate"
         dtpOrderDate.Size = New Size(100, 23)
         dtpOrderDate.TabIndex = 8
@@ -133,7 +146,7 @@ Partial Class OrderForm
         ' Label6
         ' 
         Label6.AutoSize = True
-        Label6.Location = New Point(12, 260)
+        Label6.Location = New Point(6, 201)
         Label6.Name = "Label6"
         Label6.Size = New Size(43, 15)
         Label6.TabIndex = 9
@@ -141,25 +154,26 @@ Partial Class OrderForm
         ' 
         ' txtProductName
         ' 
-        txtProductName.Location = New Point(61, 257)
+        txtProductName.Location = New Point(55, 198)
         txtProductName.Name = "txtProductName"
-        txtProductName.Size = New Size(100, 23)
+        txtProductName.Size = New Size(188, 23)
         txtProductName.TabIndex = 10
         ' 
         ' numQuantity
         ' 
-        numQuantity.Location = New Point(61, 286)
+        numQuantity.Location = New Point(286, 198)
         numQuantity.Maximum = New Decimal(New Integer() {9999, 0, 0, 0})
         numQuantity.Minimum = New Decimal(New Integer() {1, 0, 0, 0})
         numQuantity.Name = "numQuantity"
         numQuantity.Size = New Size(100, 23)
         numQuantity.TabIndex = 11
+        numQuantity.TextAlign = HorizontalAlignment.Right
         numQuantity.Value = New Decimal(New Integer() {1, 0, 0, 0})
         ' 
         ' Label7
         ' 
         Label7.AutoSize = True
-        Label7.Location = New Point(12, 288)
+        Label7.Location = New Point(249, 201)
         Label7.Name = "Label7"
         Label7.Size = New Size(31, 15)
         Label7.TabIndex = 12
@@ -167,16 +181,17 @@ Partial Class OrderForm
         ' 
         ' numUnitPrice
         ' 
-        numUnitPrice.Location = New Point(61, 315)
+        numUnitPrice.Location = New Point(429, 198)
         numUnitPrice.Maximum = New Decimal(New Integer() {99999999, 0, 0, 0})
         numUnitPrice.Name = "numUnitPrice"
         numUnitPrice.Size = New Size(100, 23)
         numUnitPrice.TabIndex = 13
+        numUnitPrice.TextAlign = HorizontalAlignment.Right
         ' 
         ' Label8
         ' 
         Label8.AutoSize = True
-        Label8.Location = New Point(12, 317)
+        Label8.Location = New Point(392, 200)
         Label8.Name = "Label8"
         Label8.Size = New Size(31, 15)
         Label8.TabIndex = 14
@@ -184,7 +199,7 @@ Partial Class OrderForm
         ' 
         ' txtNote
         ' 
-        txtNote.Location = New Point(61, 344)
+        txtNote.Location = New Point(201, 25)
         txtNote.Multiline = True
         txtNote.Name = "txtNote"
         txtNote.Size = New Size(188, 52)
@@ -194,7 +209,7 @@ Partial Class OrderForm
         ' Label9
         ' 
         Label9.AutoSize = True
-        Label9.Location = New Point(12, 347)
+        Label9.Location = New Point(164, 25)
         Label9.Name = "Label9"
         Label9.Size = New Size(31, 15)
         Label9.TabIndex = 16
@@ -202,7 +217,7 @@ Partial Class OrderForm
         ' 
         ' btnNew
         ' 
-        btnNew.Location = New Point(12, 402)
+        btnNew.Location = New Point(12, 564)
         btnNew.Name = "btnNew"
         btnNew.Size = New Size(75, 23)
         btnNew.TabIndex = 17
@@ -211,7 +226,7 @@ Partial Class OrderForm
         ' 
         ' btnSave
         ' 
-        btnSave.Location = New Point(93, 402)
+        btnSave.Location = New Point(93, 564)
         btnSave.Name = "btnSave"
         btnSave.Size = New Size(75, 23)
         btnSave.TabIndex = 18
@@ -220,7 +235,7 @@ Partial Class OrderForm
         ' 
         ' btnDelete
         ' 
-        btnDelete.Location = New Point(174, 402)
+        btnDelete.Location = New Point(174, 564)
         btnDelete.Name = "btnDelete"
         btnDelete.Size = New Size(75, 23)
         btnDelete.TabIndex = 19
@@ -229,44 +244,141 @@ Partial Class OrderForm
         ' 
         ' btnClose
         ' 
-        btnClose.Location = New Point(713, 402)
+        btnClose.Location = New Point(713, 564)
         btnClose.Name = "btnClose"
         btnClose.Size = New Size(75, 23)
         btnClose.TabIndex = 20
         btnClose.Text = "閉じる"
         btnClose.UseVisualStyleBackColor = True
         ' 
+        ' GroupBox1
+        ' 
+        GroupBox1.Controls.Add(dgvOrders)
+        GroupBox1.Controls.Add(Label3)
+        GroupBox1.Controls.Add(lblTotal)
+        GroupBox1.Location = New Point(12, 27)
+        GroupBox1.Name = "GroupBox1"
+        GroupBox1.Size = New Size(776, 200)
+        GroupBox1.TabIndex = 21
+        GroupBox1.TabStop = False
+        GroupBox1.Text = "注文一覧"
+        ' 
+        ' GroupBox2
+        ' 
+        GroupBox2.Controls.Add(GroupBox3)
+        GroupBox2.Controls.Add(Label5)
+        GroupBox2.Controls.Add(dtpOrderDate)
+        GroupBox2.Controls.Add(txtNote)
+        GroupBox2.Controls.Add(Label9)
+        GroupBox2.Controls.Add(lblOrderTotal)
+        GroupBox2.Controls.Add(Label2)
+        GroupBox2.Location = New Point(12, 233)
+        GroupBox2.Name = "GroupBox2"
+        GroupBox2.Size = New Size(776, 325)
+        GroupBox2.TabIndex = 22
+        GroupBox2.TabStop = False
+        GroupBox2.Text = "注文情報"
+        ' 
+        ' GroupBox3
+        ' 
+        GroupBox3.Controls.Add(lblItemTotal)
+        GroupBox3.Controls.Add(Label10)
+        GroupBox3.Controls.Add(btnItemRemove)
+        GroupBox3.Controls.Add(btnItemUpdate)
+        GroupBox3.Controls.Add(Label7)
+        GroupBox3.Controls.Add(Label8)
+        GroupBox3.Controls.Add(numQuantity)
+        GroupBox3.Controls.Add(btnItemAdd)
+        GroupBox3.Controls.Add(numUnitPrice)
+        GroupBox3.Controls.Add(dgvItems)
+        GroupBox3.Controls.Add(Label6)
+        GroupBox3.Controls.Add(txtProductName)
+        GroupBox3.Location = New Point(9, 83)
+        GroupBox3.Name = "GroupBox3"
+        GroupBox3.Size = New Size(761, 234)
+        GroupBox3.TabIndex = 17
+        GroupBox3.TabStop = False
+        GroupBox3.Text = "注文明細"
+        ' 
+        ' lblItemTotal
+        ' 
+        lblItemTotal.BackColor = SystemColors.ControlLightLight
+        lblItemTotal.Location = New Point(572, 201)
+        lblItemTotal.Name = "lblItemTotal"
+        lblItemTotal.Size = New Size(105, 15)
+        lblItemTotal.TabIndex = 15
+        lblItemTotal.Text = "99999999"
+        lblItemTotal.TextAlign = ContentAlignment.TopRight
+        ' 
+        ' Label10
+        ' 
+        Label10.AutoSize = True
+        Label10.Location = New Point(535, 201)
+        Label10.Name = "Label10"
+        Label10.Size = New Size(31, 15)
+        Label10.TabIndex = 16
+        Label10.Text = "金額"
+        ' 
+        ' btnItemRemove
+        ' 
+        btnItemRemove.Location = New Point(168, 156)
+        btnItemRemove.Name = "btnItemRemove"
+        btnItemRemove.Size = New Size(75, 23)
+        btnItemRemove.TabIndex = 3
+        btnItemRemove.Text = "明細を削除"
+        btnItemRemove.UseVisualStyleBackColor = True
+        ' 
+        ' btnItemUpdate
+        ' 
+        btnItemUpdate.Location = New Point(87, 156)
+        btnItemUpdate.Name = "btnItemUpdate"
+        btnItemUpdate.Size = New Size(75, 23)
+        btnItemUpdate.TabIndex = 2
+        btnItemUpdate.Text = "明細を更新"
+        btnItemUpdate.UseVisualStyleBackColor = True
+        ' 
+        ' btnItemAdd
+        ' 
+        btnItemAdd.Location = New Point(6, 156)
+        btnItemAdd.Name = "btnItemAdd"
+        btnItemAdd.Size = New Size(75, 23)
+        btnItemAdd.TabIndex = 1
+        btnItemAdd.Text = "明細を追加"
+        btnItemAdd.UseVisualStyleBackColor = True
+        ' 
+        ' dgvItems
+        ' 
+        dgvItems.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize
+        dgvItems.Location = New Point(6, 22)
+        dgvItems.Name = "dgvItems"
+        dgvItems.Size = New Size(749, 128)
+        dgvItems.TabIndex = 0
+        ' 
         ' OrderForm
         ' 
         AutoScaleDimensions = New SizeF(7F, 15F)
         AutoScaleMode = AutoScaleMode.Font
-        ClientSize = New Size(800, 433)
+        ClientSize = New Size(800, 595)
+        Controls.Add(GroupBox2)
+        Controls.Add(GroupBox1)
         Controls.Add(btnClose)
-        Controls.Add(btnDelete)
-        Controls.Add(btnSave)
-        Controls.Add(btnNew)
-        Controls.Add(Label9)
-        Controls.Add(txtNote)
-        Controls.Add(Label8)
-        Controls.Add(numUnitPrice)
-        Controls.Add(Label7)
-        Controls.Add(numQuantity)
-        Controls.Add(txtProductName)
-        Controls.Add(Label6)
-        Controls.Add(dtpOrderDate)
-        Controls.Add(Label5)
-        Controls.Add(lblTotal)
-        Controls.Add(Label3)
-        Controls.Add(Label2)
-        Controls.Add(lblAmount)
-        Controls.Add(dgvOrders)
         Controls.Add(lblCustomer)
         Controls.Add(Label1)
+        Controls.Add(btnDelete)
+        Controls.Add(btnNew)
+        Controls.Add(btnSave)
         Name = "OrderForm"
         Text = "OrderForm"
         CType(dgvOrders, ComponentModel.ISupportInitialize).EndInit()
         CType(numQuantity, ComponentModel.ISupportInitialize).EndInit()
         CType(numUnitPrice, ComponentModel.ISupportInitialize).EndInit()
+        GroupBox1.ResumeLayout(False)
+        GroupBox1.PerformLayout()
+        GroupBox2.ResumeLayout(False)
+        GroupBox2.PerformLayout()
+        GroupBox3.ResumeLayout(False)
+        GroupBox3.PerformLayout()
+        CType(dgvItems, ComponentModel.ISupportInitialize).EndInit()
         ResumeLayout(False)
         PerformLayout()
     End Sub
@@ -274,7 +386,7 @@ Partial Class OrderForm
     Friend WithEvents Label1 As Label
     Friend WithEvents lblCustomer As Label
     Friend WithEvents dgvOrders As DataGridView
-    Friend WithEvents lblAmount As Label
+    Friend WithEvents lblOrderTotal As Label
     Friend WithEvents Label2 As Label
     Friend WithEvents Label3 As Label
     Friend WithEvents lblTotal As Label
@@ -292,4 +404,13 @@ Partial Class OrderForm
     Friend WithEvents btnSave As Button
     Friend WithEvents btnDelete As Button
     Friend WithEvents btnClose As Button
+    Friend WithEvents GroupBox1 As GroupBox
+    Friend WithEvents GroupBox2 As GroupBox
+    Friend WithEvents GroupBox3 As GroupBox
+    Friend WithEvents btnItemAdd As Button
+    Friend WithEvents dgvItems As DataGridView
+    Friend WithEvents lblItemTotal As Label
+    Friend WithEvents Label10 As Label
+    Friend WithEvents btnItemRemove As Button
+    Friend WithEvents btnItemUpdate As Button
 End Class
