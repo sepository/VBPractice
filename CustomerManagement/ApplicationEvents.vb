@@ -1,6 +1,4 @@
-﻿Imports Microsoft.VisualBasic.ApplicationServices
-
-Namespace My
+﻿Namespace My
     ' The following events are available for MyApplication:
     ' Startup: Raised when the application starts, before the startup form is created.
     ' Shutdown: Raised after all application forms are closed. This event is not raised if the application terminates abnormally.
@@ -25,5 +23,50 @@ Namespace My
 
     Partial Friend Class MyApplication
 
+        ''' <summary>
+        ''' アプリの起動時
+        ''' </summary>
+        Private Sub MyApplication_Startup(sender As Object, e As ApplicationServices.StartupEventArgs) Handles Me.Startup
+            AppLog.Initialize()
+            AppLog.Info($"アプリケーションを起動しました。(バージョン {Info.Version}, .NET {Environment.Version})")
+
+            ' UI以外のスレッドで起きた、誰も捕まえなかった例外
+            AddHandler AppDomain.CurrentDomain.UnhandledException, AddressOf OnDomainUnhandledException
+
+            ' Awaitされずに放置されたタスクの中で起きた例外
+            AddHandler TaskScheduler.UnobservedTaskException, AddressOf OnUnobservedTaskException
+        End Sub
+
+        ''' <summary>
+        ''' アプリの終了時
+        ''' </summary>
+        Private Sub MyApplication_Shutdown(sender As Object, e As EventArgs) Handles Me.Shutdown
+            AppLog.Info("アプリケーションを終了しました。")
+        End Sub
+
+        ''' <summary>
+        ''' UIスレッドで起きた、誰も捕まえなかった例外。
+        ''' </summary>
+        ''' <param name="sender"></param>
+        ''' <param name="e"></param>
+        Private Sub MyApplication_UnhandledException(sender As Object, e As ApplicationServices.UnhandledExceptionEventArgs) Handles Me.UnhandledException
+            AppLog.Error("UIスレッドで未処理の例外が発生しました。", e.Exception)
+            ShowError($"予期しないエラーが発生したため、アプリケーションを終了します。{vbCrLf}" &
+                      $"詳細はログに記録しました。{vbCrLf}{AppLog.LogDirectory}", Nothing)
+
+            ' 未処理の例外の後は、アプリの状態が壊れている可能性があるため、続行せず終了する
+            e.ExitApplication = True
+        End Sub
+
+        Private Shared Sub OnDomainUnhandledException(sender As Object, e As UnhandledExceptionEventArgs)
+            AppLog.Error($"未処理の例外が発生しました。(アプリ終了中: {e.IsTerminating}", TryCast(e.ExceptionObject, Exception))
+        End Sub
+
+        Private Shared Sub OnUnobservedTaskException(sender As Object, e As UnobservedTaskExceptionEventArgs)
+            AppLog.Error($"監視されなかったタスクの例外が発生しました。", e.Exception)
+            e.SetObserved()
+        End Sub
+
     End Class
+
 End Namespace

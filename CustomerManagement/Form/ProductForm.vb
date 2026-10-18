@@ -230,6 +230,7 @@ Public Class ProductForm
             Await LoadProductsAsync()
             ClearForm()
         Catch ex As DbUpdateException When IsForeignKeyViolation(ex)
+            AppLog.Warn($"商品を削除できませんでした(注文で使用中)。ProductId={targetId}")
             ShowWarning("この商品は注文で使われているため削除できません。" & vbCrLf &
                         "使えなくする場合は、販売中のチェックを外してください。", "削除できません")
         Catch ex As Exception

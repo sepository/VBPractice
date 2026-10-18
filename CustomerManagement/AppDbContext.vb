@@ -1,4 +1,5 @@
 ﻿Imports Microsoft.EntityFrameworkCore
+Imports Microsoft.Extensions.Logging
 
 Public Class AppDbContext
     Inherits DbContext
@@ -44,8 +45,11 @@ Public Class AppDbContext
         optionsBuilder.UseSqlServer(_connectionString)
 
 #If DEBUG Then
-        optionsBuilder.LogTo(Sub(message) Debug.WriteLine(message), Microsoft.Extensions.Logging.LogLevel.Information)
+        optionsBuilder.LogTo(Sub(message) Debug.WriteLine(message), LogLevel.Information)
+#Else
+        optionsBuilder.LogTo(Sub(message) AppLog.Warn("EF Core: " & message), LogLevel.Warning)
 #End If
+
     End Sub
 
     Protected Overrides Sub OnModelCreating(modelBuilder As ModelBuilder)

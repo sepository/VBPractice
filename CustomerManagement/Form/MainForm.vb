@@ -249,6 +249,7 @@ Public Class MainForm
             Await LoadCustomersAsync()
             ClearForm()
         Catch ex As DbUpdateException When IsForeignKeyViolation(ex)
+            AppLog.Warn($"顧客を削除できませんでした(注文が登録済み)。CustomerId={targetId}")
             ShowWarning($"この顧客には注文が登録されているため削除できません。{vbCrLf}さきに注文管理で注文を削除してください。", "削除できません。")
         Catch ex As Exception
             ShowError("顧客データの削除に失敗しました。", ex)
