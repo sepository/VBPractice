@@ -306,4 +306,13 @@ Public Class MainForm
         End Using
     End Sub
 
+    ''' <summary>
+    ''' エクスポート
+    ''' </summary>
+    Private Sub btnExport_Click(sender As Object, e As EventArgs) Handles btnExport.Click
+        Using frm As New ExportForm()
+            frm.ShowDialog(Me)
+        End Using
+    End Sub
+
 End Class

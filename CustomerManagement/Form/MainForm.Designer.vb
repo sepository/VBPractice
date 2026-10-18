@@ -32,6 +32,7 @@ Partial Class MainForm
         txtKana = New TextBox()
         GroupBox1 = New GroupBox()
         GroupBox2 = New GroupBox()
+        btnProducts = New Button()
         btnOrders = New Button()
         txtAddress = New TextBox()
         Label7 = New Label()
@@ -44,10 +45,14 @@ Partial Class MainForm
         btnNew = New Button()
         btnSave = New Button()
         btnDelete = New Button()
-        btnProducts = New Button()
+        GroupBox3 = New GroupBox()
+        GroupBox4 = New GroupBox()
+        btnExport = New Button()
         CType(dgvCustomers, ComponentModel.ISupportInitialize).BeginInit()
         GroupBox1.SuspendLayout()
         GroupBox2.SuspendLayout()
+        GroupBox3.SuspendLayout()
+        GroupBox4.SuspendLayout()
         SuspendLayout()
         ' 
         ' txtSearch
@@ -129,7 +134,6 @@ Partial Class MainForm
         ' 
         ' GroupBox2
         ' 
-        GroupBox2.Controls.Add(btnProducts)
         GroupBox2.Controls.Add(btnOrders)
         GroupBox2.Controls.Add(txtAddress)
         GroupBox2.Controls.Add(Label7)
@@ -149,6 +153,15 @@ Partial Class MainForm
         GroupBox2.TabIndex = 1
         GroupBox2.TabStop = False
         GroupBox2.Text = "入力"
+        ' 
+        ' btnProducts
+        ' 
+        btnProducts.Location = New Point(6, 22)
+        btnProducts.Name = "btnProducts"
+        btnProducts.Size = New Size(75, 23)
+        btnProducts.TabIndex = 17
+        btnProducts.Text = "商品マスタ"
+        btnProducts.UseVisualStyleBackColor = True
         ' 
         ' btnOrders
         ' 
@@ -226,7 +239,7 @@ Partial Class MainForm
         ' 
         ' btnNew
         ' 
-        btnNew.Location = New Point(12, 406)
+        btnNew.Location = New Point(6, 22)
         btnNew.Name = "btnNew"
         btnNew.Size = New Size(75, 23)
         btnNew.TabIndex = 2
@@ -235,7 +248,7 @@ Partial Class MainForm
         ' 
         ' btnSave
         ' 
-        btnSave.Location = New Point(93, 406)
+        btnSave.Location = New Point(87, 22)
         btnSave.Name = "btnSave"
         btnSave.Size = New Size(75, 23)
         btnSave.TabIndex = 3
@@ -244,30 +257,52 @@ Partial Class MainForm
         ' 
         ' btnDelete
         ' 
-        btnDelete.Location = New Point(174, 406)
+        btnDelete.Location = New Point(168, 22)
         btnDelete.Name = "btnDelete"
         btnDelete.Size = New Size(75, 23)
         btnDelete.TabIndex = 4
         btnDelete.Text = "削除"
         btnDelete.UseVisualStyleBackColor = True
         ' 
-        ' btnProducts
+        ' GroupBox3
         ' 
-        btnProducts.Location = New Point(379, 138)
-        btnProducts.Name = "btnProducts"
-        btnProducts.Size = New Size(75, 23)
-        btnProducts.TabIndex = 17
-        btnProducts.Text = "商品マスタ"
-        btnProducts.UseVisualStyleBackColor = True
+        GroupBox3.Controls.Add(btnNew)
+        GroupBox3.Controls.Add(btnDelete)
+        GroupBox3.Controls.Add(btnSave)
+        GroupBox3.Location = New Point(12, 406)
+        GroupBox3.Name = "GroupBox3"
+        GroupBox3.Size = New Size(776, 60)
+        GroupBox3.TabIndex = 5
+        GroupBox3.TabStop = False
+        GroupBox3.Text = "操作"
+        ' 
+        ' GroupBox4
+        ' 
+        GroupBox4.Controls.Add(btnExport)
+        GroupBox4.Controls.Add(btnProducts)
+        GroupBox4.Location = New Point(12, 472)
+        GroupBox4.Name = "GroupBox4"
+        GroupBox4.Size = New Size(776, 60)
+        GroupBox4.TabIndex = 6
+        GroupBox4.TabStop = False
+        GroupBox4.Text = "メニュー"
+        ' 
+        ' btnExport
+        ' 
+        btnExport.Location = New Point(87, 22)
+        btnExport.Name = "btnExport"
+        btnExport.Size = New Size(75, 23)
+        btnExport.TabIndex = 18
+        btnExport.Text = "エクスポート"
+        btnExport.UseVisualStyleBackColor = True
         ' 
         ' MainForm
         ' 
         AutoScaleDimensions = New SizeF(7F, 15F)
         AutoScaleMode = AutoScaleMode.Font
-        ClientSize = New Size(800, 450)
-        Controls.Add(btnDelete)
-        Controls.Add(btnSave)
-        Controls.Add(btnNew)
+        ClientSize = New Size(800, 543)
+        Controls.Add(GroupBox4)
+        Controls.Add(GroupBox3)
         Controls.Add(GroupBox2)
         Controls.Add(GroupBox1)
         Controls.Add(Label2)
@@ -278,6 +313,8 @@ Partial Class MainForm
         GroupBox1.PerformLayout()
         GroupBox2.ResumeLayout(False)
         GroupBox2.PerformLayout()
+        GroupBox3.ResumeLayout(False)
+        GroupBox4.ResumeLayout(False)
         ResumeLayout(False)
         PerformLayout()
     End Sub
@@ -304,5 +341,8 @@ Partial Class MainForm
     Friend WithEvents Label7 As Label
     Friend WithEvents btnOrders As Button
     Friend WithEvents btnProducts As Button
+    Friend WithEvents GroupBox3 As GroupBox
+    Friend WithEvents GroupBox4 As GroupBox
+    Friend WithEvents btnExport As Button
 
 End Class
