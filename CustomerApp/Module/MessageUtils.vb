@@ -12,7 +12,7 @@
     Public Sub ShowError(message As String, Optional ex As Exception = Nothing)
         Dim m As String = message
         If ex IsNot Nothing Then
-            m &= $"{vbCrLf}{vbCrLf}{ex.Message}"
+            m &= $"{vbCrLf}{vbCrLf}{GetFullMessage(ex)}"
         End If
 
         AppLog.Error(m, ex)

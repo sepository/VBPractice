@@ -1,3 +1,4 @@
 <Solution>
+  <Project Path="CustomerApp.Tests/CustomerApp.Tests.vbproj" Id="a55a161e-665d-409a-870a-d011a16c00c1" />
   <Project Path="CustomerApp/CustomerApp.vbproj" />
 </Solution>

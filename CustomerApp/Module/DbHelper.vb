@@ -6,17 +6,52 @@ Public Module DbHelper
     ''' <summary>
     ''' 保存・削除の失敗が外部キー制約違反かどうかを判定
     ''' </summary>
-    Public Function IsForeignKeyViolation(ex As DbUpdateException) As Boolean
-        Dim sqlEx As SqlException = TryCast(ex.InnerException, SqlException)
-        Return sqlEx IsNot Nothing AndAlso sqlEx.Number = 547
+    Public Function IsForeignKeyViolation(ex As Exception) As Boolean
+        Return HasSqlError(ex, 547)
     End Function
 
     ''' <summary>
     ''' 一意制約違反かどうかを判定する
     ''' </summary>
-    Public Function IsUniqueViolation(ex As DbUpdateException) As Boolean
+    Public Function IsUniqueViolation(ex As Exception) As Boolean
         Dim sqlEx As SqlException = TryCast(ex.InnerException, SqlException)
-        Return sqlEx IsNot Nothing AndAlso (sqlEx.Number = 2627 OrElse sqlEx.Number = 2601)
+        Return HasSqlError(ex, 2627) OrElse HasSqlError(ex, 2601)
+    End Function
+
+    ''' <summary>
+    ''' 例外の入れ子を最後まで辿り、指定した番号のSQL Serverエラーが含まれているかを調べる。
+    ''' </summary>
+    Private Function HasSqlError(ex As Exception, number As Integer) As Boolean
+        Dim current As Exception = ex
+
+        While current IsNot Nothing
+            Dim sqlEx As SqlException = TryCast(current, SqlException)
+            If sqlEx IsNot Nothing Then
+                For Each err As SqlError In sqlEx.Errors
+                    If err.Number = number Then
+                        Return True
+                    End If
+                Next
+            End If
+            current = current.InnerException
+        End While
+
+        Return False
+    End Function
+
+    ''' <summary>
+    ''' エラー表示用に、例外の入れ子のメッセージをすべて連結する。
+    ''' </summary>
+    Public Function GetFullMessage(ex As Exception) As String
+        Dim messages As New List(Of String)()
+        Dim current As Exception = ex
+
+        While current IsNot Nothing
+            messages.Add(current.Message)
+            current = current.InnerException
+        End While
+
+        Return String.Join(vbCrLf & " → ", messages)
     End Function
 
     ''' <summary>

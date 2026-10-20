@@ -121,6 +121,7 @@ Public Class AppDbContext
                 e.ToTable("Products")
                 e.HasKey(Function(p) p.ProductId)
                 e.Property(Function(p) p.ProductCode).IsRequired().HasMaxLength(20)
+                e.HasIndex(Function(p) p.ProductCode).IsUnique()
                 e.Property(Function(p) p.Name).IsRequired().HasMaxLength(100)
                 e.Property(Function(p) p.CreatedAt).HasColumnType("datetime2").HasDefaultValueSql("SYSDATETIME()")
                 e.Property(Function(p) p.UpdatedAt).HasColumnType("datetime2").HasDefaultValueSql("SYSDATETIME()")

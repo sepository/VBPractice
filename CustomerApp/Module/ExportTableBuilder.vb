@@ -32,7 +32,7 @@ Public Module ExportTableBuilder
     ''' 注文明細
     ''' </summary>
     Public Function FromOrderLines(lines As IEnumerable(Of OrderLineRow)) As ExportTable
-        Dim table As New ExportTable With {.SheetName = "商品一覧"}
+        Dim table As New ExportTable With {.SheetName = "注文明細"}
 
         ' 見出し
         table.Headers.AddRange(New String() {

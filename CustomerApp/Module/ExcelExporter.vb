@@ -36,7 +36,7 @@ Public Module ExcelExporter
             ' ---- 列の表示形式 ----
             If table.Rows.Count > 0 Then
                 For c As Integer = 0 To columnCount - 1
-                    If c > table.ColumnFormats.Count AndAlso Not String.IsNullOrEmpty(table.ColumnFormats(c)) Then
+                    If c < table.ColumnFormats.Count AndAlso Not String.IsNullOrEmpty(table.ColumnFormats(c)) Then
                         sheet.Range(2, c + 1, lastRow, c + 1).Style.NumberFormat.Format = table.ColumnFormats(c)
                     End If
                 Next
