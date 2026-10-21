@@ -30,6 +30,23 @@
             AppLog.Initialize()
             AppLog.Info($"アプリケーションを起動しました。(バージョン {Info.Version}, .NET {Environment.Version})")
 
+            ' 設定ファイル(appsettings.json)が読み込めるか確認する。
+            Try
+                AppConfig.Validate()
+
+                Dim localState As String = If(AppConfig.HasLocalSettings(), "あり", "なし")
+                AppLog.Info($"設定ファイルを読み込みました。(appsettings.local.json: {localState})")
+            Catch ex As Exception
+                AppLog.Error("設定ファイルの読み込みに失敗しました。", ex)
+                ShowError($"設定ファイルを読み込めなかったため、アプリケーションを起動できません。{vbCrLf}{vbCrLf}" &
+                          $"・appsettings.jsonが、実行ファイルと同じフォルダにあるか{vbCrLf}" &
+                          $"・書式(カンマ、引用符、波かっこ)が正しいか{vbCrLf}" &
+                          $"・接続文字列(ConnectionStrings:Default)が書かれているか" &
+                          $"を確認してください。{vbCrLf}{vbCrLf}{GetFullMessage(ex)}")
+
+                ' 起動を中止する
+                e.Cancel = True
+            End Try
             ' UI以外のスレッドで起きた、誰も捕まえなかった例外
             AddHandler AppDomain.CurrentDomain.UnhandledException, AddressOf OnDomainUnhandledException
 

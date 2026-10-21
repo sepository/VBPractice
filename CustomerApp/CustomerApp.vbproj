@@ -19,6 +19,8 @@
     <PackageReference Include="Microsoft.Data.SqlClient" Version="7.1.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.13" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.13" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.13" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.13" />
   </ItemGroup>
 
   <ItemGroup>
@@ -30,6 +32,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="appsettings.local.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="My Project\Application.myapp">
       <Generator>MyApplicationCodeGenerator</Generator>
       <LastGenOutput>Application.Designer.vb</LastGenOutput>

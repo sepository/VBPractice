@@ -35,7 +35,7 @@ Public Module AppLog
     ''' <summary>
     ''' ログファイルを残す日数
     ''' </summary>
-    Private Const RetentionDays As Integer = 30
+    Private Const DefaultRetentionDays As Integer = 30
 
     ''' <summary>
     ''' ログの保存先フォルダ
@@ -60,7 +60,10 @@ Public Module AppLog
         Try
             Directory.CreateDirectory(LogDirectory)
 
-            Dim limit As DateTime = DateTime.Now.AddDays(-RetentionDays)
+            ApplyConfiguration()
+
+            Dim retentionDays As Integer = AppConfig.GetInt("Logging:RetentionDays", DefaultRetentionDays)
+            Dim limit As DateTime = DateTime.Now.AddDays(-retentionDays)
             For Each path As String In Directory.GetFiles(LogDirectory, "app-*.log")
                 If File.GetLastWriteTime(path) < limit Then
                     File.Delete(path)
@@ -68,6 +71,19 @@ Public Module AppLog
             Next
         Catch
             ' ログの準備に失敗してもアプリは止めない。
+        End Try
+    End Sub
+
+    Private Sub ApplyConfiguration()
+        Try
+            Dim text As String = AppConfig.GetString("Logging:MinimumSeverity", Nothing)
+            Dim parsed As LogSeverity
+
+            If Not String.IsNullOrWhiteSpace(text) AndAlso [Enum].TryParse(text, True, parsed) Then
+                MinimumSeverity = parsed
+            End If
+        Catch
+            ' 設定が読み込めなくても、規定値のまま続ける。
         End Try
     End Sub
 
