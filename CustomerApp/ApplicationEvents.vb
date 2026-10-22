@@ -47,6 +47,21 @@
                 ' 起動を中止する
                 e.Cancel = True
             End Try
+
+            ' データベースを最新の状態にする。
+            Try
+                DatabaseInitializer.Run(AppConfig.ConnectionString)
+            Catch ex As Exception
+                AppLog.Error("データベースの接続に失敗しました。", ex)
+                MessageUtils.ShowError($"データベースに接続できなかったため、アプリケーションを起動できません{vbCrLf}{vbCrLf}" &
+                                       $"・SQL Serverが起動しているか{vbCrLf}" &
+                                       $"・appsettings.json(またはappsettings.local.json)の接続先が正しいか{vbCrLf}" &
+                                       $"・このPCのユーザーに接続する権限があるか{vbCrLf}{vbCrLf}" &
+                                       $"を確認してください。{vbCrLf}{vbCrLf}{GetFullMessage(ex)}")
+
+                e.Cancel = True
+            End Try
+
             ' UI以外のスレッドで起きた、誰も捕まえなかった例外
             AddHandler AppDomain.CurrentDomain.UnhandledException, AddressOf OnDomainUnhandledException
 

@@ -134,4 +134,16 @@ Public Module AppConfig
         Return defaultValue
     End Function
 
+    ''' <summary>
+    ''' 任意の論理型を読み込む
+    ''' </summary>
+    Public Function GetBool(key As String, defaultValue As Boolean) As Boolean
+        Dim parsed As Boolean
+        If Boolean.TryParse(GetString(key, Nothing), parsed) Then
+            Return parsed
+        End If
+
+        Return defaultValue
+    End Function
+
 End Module
