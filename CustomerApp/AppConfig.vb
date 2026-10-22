@@ -28,12 +28,30 @@ Public Module AppConfig
         ' AddJsonFileの引数は(ファイル名, 無くてもよいか, ファイルの変更を監視して再読み込みするか)
         ' appsettings.json          : 無くてはならない
         ' appsettings.local.json    : 無くてもよい
-        Return New ConfigurationBuilder().
-            SetBasePath(basePath).
-            AddJsonFile(BaseFileName, False, False).
-            AddJsonFile(LocalFileName, True, True).
-            AddEnvironmentVariables(environmentPrefix).
-            Build()
+        Dim builder As New ConfigurationBuilder()
+        builder.SetBasePath(basePath)
+        builder.AddJsonFile(BaseFileName, False, False)
+
+        ' ローカル設定ファイルが「空(0バイト・空白)」の場合は、読み込まない。
+        ' 空のファイルはJSONとして正しくないため、エラーで起動できなくなる。
+        If Not IsBlankFile(Path.Combine(basePath, LocalFileName)) Then
+            builder.AddJsonFile(LocalFileName, True, False)
+        End If
+
+        builder.AddEnvironmentVariables(environmentPrefix)
+
+        Return builder.Build()
+    End Function
+
+    ''' <summary>
+    ''' ファイルがない、もしくは中身が空
+    ''' </summary>
+    Private Function IsBlankFile(filePath As String) As Boolean
+        If Not File.Exists(filePath) Then
+            Return True
+        End If
+
+        Return String.IsNullOrWhiteSpace(File.ReadAllText(filePath))
     End Function
 
     ''' <summary>
