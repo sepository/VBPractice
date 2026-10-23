@@ -1,4 +1,5 @@
-﻿Imports Microsoft.EntityFrameworkCore
+﻿Imports System.Threading
+Imports Microsoft.EntityFrameworkCore
 
 Public Class MainForm
 
@@ -14,6 +15,11 @@ Public Class MainForm
     ''' DBアクセス中、二重処理や画面終了を防ぐ。
     ''' </summary>
     Private _isBusy As Boolean = False
+
+    ''' <summary>
+    ''' 検索を中止するためのリモコン
+    ''' </summary>
+    Private _searchCts As CancellationTokenSource = Nothing
 
     ''' <summary>
     ''' 起動時
@@ -96,10 +102,12 @@ Public Class MainForm
         Next
     End Sub
 
-    Private Async Function LoadCustomersAsync() As Task
+    Private Async Function LoadCustomersAsync(Optional cancellationToken As CancellationToken = Nothing) As Task
         Try
-            Dim customers As List(Of Customer) = Await _repo.GetAllAsync(txtSearch.Text)
+            Dim customers As List(Of Customer) = Await _repo.GetAllAsync(txtSearch.Text, cancellationToken)
             dgvCustomers.DataSource = customers
+        Catch ex As Exception When DbHelper.IsCanceled(ex, cancellationToken)
+            AppLog.Info("顧客の検索を中止しました。")
         Catch ex As Exception
             ShowError("顧客データの取得に失敗しました。", ex)
         End Try
@@ -109,13 +117,31 @@ Public Class MainForm
     ''' 検索
     ''' </summary>
     Private Async Sub btnSearch_Click(sender As Object, e As EventArgs) Handles btnSearch.Click
-        SetBusy(True)
-        Try
-            Await LoadCustomersAsync()
-        Finally
-            SetBusy(False)
-        End Try
+
+        Using cts As New CancellationTokenSource()
+            _searchCts = cts
+
+            SetBusy(True)
+            btnCancelSearch.Enabled = True
+            Try
+                Await LoadCustomersAsync(cts.Token)
+            Finally
+                btnCancelSearch.Enabled = False
+                _searchCts = Nothing
+                SetBusy(False)
+            End Try
+        End Using
+
         ClearForm()
+    End Sub
+
+    ''' <summary>
+    ''' 検索中止
+    ''' </summary>
+    Private Sub btnCancelSearch_Click(sender As Object, e As EventArgs) Handles btnCancelSearch.Click
+        If _searchCts IsNot Nothing Then
+            _searchCts.Cancel()
+        End If
     End Sub
 
     ''' <summary>

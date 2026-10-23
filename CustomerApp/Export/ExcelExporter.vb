@@ -1,4 +1,5 @@
 ﻿Imports System.Globalization
+Imports System.Threading
 Imports ClosedXML.Excel
 
 ''' <summary>
@@ -9,7 +10,7 @@ Public Module ExcelExporter
     ''' <summary>
     ''' Excelに書き出し
     ''' </summary>
-    Public Sub Save(table As ExportTable, path As String)
+    Public Sub Save(table As ExportTable, path As String, Optional cancellationToken As CancellationToken = Nothing)
         Using workbook As New XLWorkbook()
             Dim sheet As IXLWorksheet = workbook.Worksheets.Add(table.SheetName)
 
@@ -27,6 +28,9 @@ Public Module ExcelExporter
 
             ' ---- データ行 ----
             For r As Integer = 0 To table.Rows.Count - 1
+                ' 同期の処理は、自分で中止されたかを確かめる
+                cancellationToken.ThrowIfCancellationRequested()
+
                 Dim values As Object() = table.Rows(r)
                 For c As Integer = 0 To values.Length - 1
                     SetCellValue(sheet.Cell(r + 2, c + 1), values(c))
@@ -47,6 +51,8 @@ Public Module ExcelExporter
             sheet.Range(1, 1, lastRow, columnCount).SetAutoFilter()
             sheet.Columns().AdjustToContents()
 
+            ' 保存は途中で止められないので、始める前に最後の確認
+            cancellationToken.ThrowIfCancellationRequested()
             workbook.SaveAs(path)
         End Using
     End Sub

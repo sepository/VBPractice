@@ -31,6 +31,7 @@ Partial Class MainForm
         Label5 = New Label()
         txtKana = New TextBox()
         GroupBox1 = New GroupBox()
+        btnCancelSearch = New Button()
         GroupBox2 = New GroupBox()
         btnOrders = New Button()
         txtAddress = New TextBox()
@@ -47,8 +48,8 @@ Partial Class MainForm
         btnDelete = New Button()
         GroupBox3 = New GroupBox()
         GroupBox4 = New GroupBox()
-        btnExport = New Button()
         btnImport = New Button()
+        btnExport = New Button()
         CType(dgvCustomers, ComponentModel.ISupportInitialize).BeginInit()
         GroupBox1.SuspendLayout()
         GroupBox2.SuspendLayout()
@@ -123,6 +124,7 @@ Partial Class MainForm
         ' 
         ' GroupBox1
         ' 
+        GroupBox1.Controls.Add(btnCancelSearch)
         GroupBox1.Controls.Add(txtSearch)
         GroupBox1.Controls.Add(btnSearch)
         GroupBox1.Controls.Add(dgvCustomers)
@@ -132,6 +134,16 @@ Partial Class MainForm
         GroupBox1.TabIndex = 0
         GroupBox1.TabStop = False
         GroupBox1.Text = "検索"
+        ' 
+        ' btnCancelSearch
+        ' 
+        btnCancelSearch.Enabled = False
+        btnCancelSearch.Location = New Point(193, 22)
+        btnCancelSearch.Name = "btnCancelSearch"
+        btnCancelSearch.Size = New Size(75, 23)
+        btnCancelSearch.TabIndex = 3
+        btnCancelSearch.Text = "中止"
+        btnCancelSearch.UseVisualStyleBackColor = True
         ' 
         ' GroupBox2
         ' 
@@ -289,15 +301,6 @@ Partial Class MainForm
         GroupBox4.TabStop = False
         GroupBox4.Text = "メニュー"
         ' 
-        ' btnExport
-        ' 
-        btnExport.Location = New Point(87, 22)
-        btnExport.Name = "btnExport"
-        btnExport.Size = New Size(75, 23)
-        btnExport.TabIndex = 18
-        btnExport.Text = "エクスポート"
-        btnExport.UseVisualStyleBackColor = True
-        ' 
         ' btnImport
         ' 
         btnImport.Location = New Point(168, 22)
@@ -306,6 +309,15 @@ Partial Class MainForm
         btnImport.TabIndex = 19
         btnImport.Text = "CSV取込"
         btnImport.UseVisualStyleBackColor = True
+        ' 
+        ' btnExport
+        ' 
+        btnExport.Location = New Point(87, 22)
+        btnExport.Name = "btnExport"
+        btnExport.Size = New Size(75, 23)
+        btnExport.TabIndex = 18
+        btnExport.Text = "エクスポート"
+        btnExport.UseVisualStyleBackColor = True
         ' 
         ' MainForm
         ' 
@@ -356,5 +368,6 @@ Partial Class MainForm
     Friend WithEvents GroupBox4 As GroupBox
     Friend WithEvents btnExport As Button
     Friend WithEvents btnImport As Button
+    Friend WithEvents btnCancelSearch As Button
 
 End Class

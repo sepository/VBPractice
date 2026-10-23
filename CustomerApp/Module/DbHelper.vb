@@ -1,7 +1,29 @@
-﻿Imports Microsoft.Data.SqlClient
+﻿Imports System.Threading
+Imports Microsoft.Data.SqlClient
 Imports Microsoft.EntityFrameworkCore
 
 Public Module DbHelper
+
+    ''' <summary>
+    ''' 例外が利用者による中止が原因か判定する。
+    ''' </summary>
+    Public Function IsCanceled(ex As Exception, token As CancellationToken) As Boolean
+        If token.IsCancellationRequested Then
+            Return True
+        End If
+
+        Dim current As Exception = ex
+        While current IsNot Nothing
+            If TypeOf current Is OperationCanceledException Then
+                Return True
+            End If
+
+            current = current.InnerException
+        End While
+
+        Return False
+    End Function
+
 
     ''' <summary>
     ''' 保存・削除の失敗が外部キー制約違反かどうかを判定

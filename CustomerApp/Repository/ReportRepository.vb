@@ -1,4 +1,5 @@
-﻿Imports Microsoft.EntityFrameworkCore
+﻿Imports System.Threading
+Imports Microsoft.EntityFrameworkCore
 
 ''' <summary>
 ''' 帳票・エクスポート用の検索をまとめたクラス
@@ -14,7 +15,8 @@ Public Class ReportRepository
     ''' <summary>
     ''' 指定した期間内の注文明細を取得する。
     ''' </summary>
-    Public Async Function GetOrderLinesAsync(fromDate As DateTime, toDate As DateTime) As Task(Of List(Of OrderLineRow))
+    Public Async Function GetOrderLinesAsync(fromDate As DateTime, toDate As DateTime,
+                                             Optional cancellationToken As CancellationToken = Nothing) As Task(Of List(Of OrderLineRow))
         Dim fromDay As DateTime = fromDate.Date
         Dim toDay As DateTime = toDate.Date
 
@@ -34,7 +36,7 @@ Public Class ReportRepository
                     .Quantity = i.Quantity,
                     .UnitPrice = i.UnitPrice
                 }).
-                ToListAsync()
+                ToListAsync(cancellationToken)
         End Using
     End Function
 

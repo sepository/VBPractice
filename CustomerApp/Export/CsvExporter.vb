@@ -1,6 +1,7 @@
 ﻿Imports System.Globalization
 Imports System.IO
 Imports System.Text
+Imports System.Threading
 
 ''' <summary>
 ''' 表をCSVファイルに書き出す。
@@ -10,7 +11,7 @@ Public Module CsvExporter
     ''' <summary>
     ''' CSV書き出し
     ''' </summary>
-    Public Sub Save(table As ExportTable, path As String)
+    Public Sub Save(table As ExportTable, path As String, Optional cancellationToken As CancellationToken = Nothing)
         ' UTF8Encoding(True) = BOMあり
         Using writer As New StreamWriter(path, False, New UTF8Encoding(True))
             ' RFC 4180 は改行をCRLFと定めている。
@@ -19,6 +20,10 @@ Public Module CsvExporter
             writer.WriteLine(String.Join(",", table.Headers.Select(Function(h) Escape(h, False))))
 
             For Each row As Object() In table.Rows
+                ' 同期の処理は、自分で中止されたかを確かめる。
+                ' 確かめれなければ、中止を要求しても最後まで止めない。
+                cancellationToken.ThrowIfCancellationRequested()
+
                 writer.WriteLine(String.Join(",", row.Select(Function(v) FormatValue(v))))
             Next
         End Using

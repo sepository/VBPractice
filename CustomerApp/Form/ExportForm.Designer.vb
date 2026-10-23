@@ -34,6 +34,7 @@ Partial Class ExportForm
         GroupBox3 = New GroupBox()
         btnExport = New Button()
         btnClose = New Button()
+        btnCancel = New Button()
         GroupBox1.SuspendLayout()
         GroupBox2.SuspendLayout()
         GroupBox3.SuspendLayout()
@@ -86,11 +87,11 @@ Partial Class ExportForm
         dtpTo.Size = New Size(87, 23)
         dtpTo.TabIndex = 5
         ' 
-        ' rboExcel
+        ' rdoExcel
         ' 
         rdoExcel.AutoSize = True
         rdoExcel.Location = New Point(6, 22)
-        rdoExcel.Name = "rboExcel"
+        rdoExcel.Name = "rdoExcel"
         rdoExcel.Size = New Size(86, 19)
         rdoExcel.TabIndex = 6
         rdoExcel.TabStop = True
@@ -162,11 +163,23 @@ Partial Class ExportForm
         btnClose.Text = "閉じる"
         btnClose.UseVisualStyleBackColor = True
         ' 
+        ' btnCancel
+        ' 
+        btnCancel.Anchor = AnchorStyles.Bottom Or AnchorStyles.Left
+        btnCancel.Enabled = False
+        btnCancel.Location = New Point(93, 216)
+        btnCancel.Name = "btnCancel"
+        btnCancel.Size = New Size(75, 23)
+        btnCancel.TabIndex = 13
+        btnCancel.Text = "中止"
+        btnCancel.UseVisualStyleBackColor = True
+        ' 
         ' ExportForm
         ' 
         AutoScaleDimensions = New SizeF(7F, 15F)
         AutoScaleMode = AutoScaleMode.Font
         ClientSize = New Size(492, 251)
+        Controls.Add(btnCancel)
         Controls.Add(btnClose)
         Controls.Add(btnExport)
         Controls.Add(GroupBox3)
@@ -195,4 +208,5 @@ Partial Class ExportForm
     Friend WithEvents GroupBox3 As GroupBox
     Friend WithEvents btnExport As Button
     Friend WithEvents btnClose As Button
+    Friend WithEvents btnCancel As Button
 End Class

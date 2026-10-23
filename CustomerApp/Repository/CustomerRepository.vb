@@ -1,6 +1,7 @@
 ﻿Imports System.Data
 Imports System.Data.Common
 Imports System.IO
+Imports System.Threading
 Imports Microsoft.Data.SqlClient
 Imports Microsoft.EntityFrameworkCore
 Imports Microsoft.Extensions.Logging.Abstractions
@@ -21,7 +22,8 @@ Public Class CustomerRepository
     ''' 検索ワード
     ''' </param>
     ''' <returns></returns>
-    Public Async Function GetAllAsync(Optional keyword As String = Nothing) As Task(Of List(Of Customer))
+    Public Async Function GetAllAsync(Optional keyword As String = Nothing,
+                                      Optional cancellationToken As CancellationToken = Nothing) As Task(Of List(Of Customer))
         Using db As New AppDbContext(_connectionString)
             Dim query As IQueryable(Of Customer) = db.Customers.AsNoTracking()
 
@@ -40,7 +42,7 @@ Public Class CustomerRepository
                 Function(c) New With {
                     .Customer = c,
                     .OrderCount = c.Orders.Count()
-                }).ToListAsync()
+                }).ToListAsync(cancellationToken)
 
             ' 顧客毎の注文金額合計を取得
             Dim totals = Await db.OrderItems.AsNoTracking().
@@ -48,7 +50,8 @@ Public Class CustomerRepository
                 Select(Function(g) New With {
                     .CustomerId = g.Key,
                     .Total = g.Sum(Function(i) i.Quantity * i.UnitPrice)
-                }).ToListAsync()
+                }).ToListAsync(cancellationToken)
+
             Dim totalByCutomer As Dictionary(Of Integer, Decimal) =
                 totals.ToDictionary(Function(t) t.CustomerId, Function(t) t.Total)
 
@@ -85,12 +88,12 @@ Public Class CustomerRepository
     ''' <summary>
     ''' 登録済のメールアドレス一覧
     ''' </summary>
-    Public Async Function GetEmailsAsync() As Task(Of List(Of String))
+    Public Async Function GetEmailsAsync(Optional cancellationToken As CancellationToken = Nothing) As Task(Of List(Of String))
         Using db As New AppDbContext(_connectionString)
             Return Await db.Customers.AsNoTracking().
                 Where(Function(c) Not String.IsNullOrEmpty(c.Email)).
                 Select(Function(c) c.Email).
-                ToListAsync()
+                ToListAsync(cancellationToken)
         End Using
     End Function
 
