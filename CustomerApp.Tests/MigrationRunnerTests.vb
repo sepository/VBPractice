@@ -256,4 +256,80 @@ Public Class MigrationRunnerTests
         Assert.HasCount(RealScripts().Count, runner.GetPendingScripts())
     End Sub
 
+    ' ---- V005(顧客のメールアドレスの一意インデックス) ----
+
+    Private Function EmailIndexCount() As Integer
+        Return Convert.ToInt32(ExecuteScalar("SELECT COUNT(*) FROM sys.indexes WHERE name = N'UX_Customers_Email' AND object_id = OBJECT_ID(N'dbo.Customers')"))
+    End Function
+
+    Private Sub PrepareDatabaseBeforeV005()
+        Dim runner As MigrationRunner = NewRunner(RealScripts().Where(Function(s) s.Version <= 4).ToList())
+        runner.EnsureDatabaseExists()
+        runner.ApplyPending()
+    End Sub
+
+    <TestMethod>
+    Public Sub ApplyPending_V005はメールアドレスが重複していたら分かりやすく失敗し何も変えない()
+        PrepareDatabaseBeforeV005()
+        ' V005より前は、一意インデックスがないので同じメールアドレスが登録できてしまっていた。
+        ExecuteNonQuery("INSERT INTO dbo.Customers (Name, Email) VALUES (N'A', 'dup@example.com'), (N'B', N'dup@example.com')")
+
+        Dim runner As MigrationRunner = NewRunner(RealScripts())
+        Dim caught As MigrationException = Nothing
+        Try
+            runner.ApplyPending()
+        Catch ex As MigrationException
+            caught = ex
+        End Try
+
+        Assert.IsNotNull(caught, "重複が検出されて例外になるはず")
+        Assert.Contains("V005", caught.Message, "どのスクリプトが失敗したか、メッセージで分かるはず")
+        Assert.IsGreaterThanOrEqualTo(0, DbHelper.GetFullMessage(caught).IndexOf("重複", StringComparison.Ordinal), "原因(メールアドレスの重複)がメッセージで分かるはず")
+        Assert.AreEqual(0, EmailIndexCount(), "インデックスは作られていないはず")
+        Assert.AreEqual(4, runner.GetCurrentVersion(), "V005は記録されず、V004のままのはず")
+        Assert.AreEqual(2, Count("Customers"), "既存の顧客は勝手に消されていないはず")
+    End Sub
+
+    <TestMethod>
+    Public Sub ApplyPending_V005は重複を解消したあとなら適用できる()
+        PrepareDatabaseBeforeV005()
+        ExecuteNonQuery("INSERT INTO dbo.Customers (Name, Email) VALUES (N'A', N'dup@example.com'), (N'B', N'dup@example.com')")
+        Dim runner As MigrationRunner = NewRunner(RealScripts())
+        Try
+            runner.ApplyPending()
+        Catch ex As MigrationException
+            ' 1回目は、重複で失敗する(上のテストで確認済み)
+        End Try
+
+        ExecuteNonQuery("DELETE FROM dbo.Customers WHERE Name = N'B'")
+        Dim applied As List(Of MigrationScript) = runner.ApplyPending()
+
+        Assert.HasCount(1, applied)
+        Assert.AreEqual(1, EmailIndexCount())
+        Assert.AreEqual(5, runner.GetCurrentVersion())
+    End Sub
+
+    <TestMethod>
+    Public Sub ApplyPending_V005の一意インデックスは空のメールアドレスを何件でも許し重複は拒否する()
+        Dim runner As MigrationRunner = NewRunner(RealScripts())
+        runner.EnsureDatabaseExists()
+        runner.ApplyPending()
+
+        ' NULLと空文字は何件あってもよい
+        ExecuteNonQuery("INSERT INTO dbo.Customers (Name, Email) VALUES (N'A', NULL), (N'B', NULL), (N'C', ''), (N'D', '')")
+        Assert.AreEqual(4, Count("Customers"))
+
+        ' 空でないメールアドレスの重複は拒否される
+        ExecuteNonQuery("INSERT INTO dbo.Customers (Name, Email) VALUES (N'E', N'x@example.com')")
+        Dim caught As SqlException = Nothing
+        Try
+            ExecuteNonQuery("INSERT INTO dbo.Customers (Name, Email) VALUES (N'F', N'x@example.com')")
+        Catch ex As SqlException
+            caught = ex
+        End Try
+
+        Assert.IsNotNull(caught, "重複は拒否されるはず")
+        Assert.AreEqual(2601, caught.Number)
+    End Sub
+
 End Class

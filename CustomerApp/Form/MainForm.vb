@@ -218,6 +218,11 @@ Public Class MainForm
 
             Await LoadCustomersAsync()
             ClearForm()
+        Catch ex As Exception When DbHelper.IsUniqueViolation(ex)
+            AppLog.Warn("顧客データの保存に失敗しました。(メールアドレスの重複)")
+            ShowWarning("このメールアドレスは、既に他の顧客に登録されています。" & vbCrLf &
+                        "別のメールアドレスにするか、既存の顧客を確認してください。",
+                        "保存できません")
         Catch ex As Exception
             ShowError("顧客データの保存に失敗しました。", ex)
         Finally

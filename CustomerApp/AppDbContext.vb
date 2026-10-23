@@ -68,6 +68,13 @@ Public Class AppDbContext
                 e.Property(Function(c) c.UpdatedAt).HasColumnType("datetime2").HasDefaultValueSql("SYSDATETIME()")
                 e.Ignore(Function(c) c.OrderCount)
                 e.Ignore(Function(c) c.TotalAmount)
+
+                ' メールアドレスの重複を禁止する。
+                ' 空(NULL・空文字)は何件あってもよい。
+                e.HasIndex(Function(c) c.Email).
+                    IsUnique().
+                    HasDatabaseName("UX_Customers_Email").
+                    HasFilter("[Email] IS NOT NULL AND [Email] <> N''")
             End Sub)
 
         ' 注文

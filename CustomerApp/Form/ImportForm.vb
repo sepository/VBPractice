@@ -139,6 +139,14 @@ Public Class ImportForm
             txtResult.Text = $"{count:N0}件を取り込みました。" & vbCrLf & vbCrLf & "続けて取り込む場合は、「ファイルを選ぶ」から、もう一度選んでください。"
 
             MessageUtils.ShowInformaion($"{count:N0}件を取り込みました。", "取込完了")
+        Catch ex As Exception When DbHelper.IsUniqueViolation(ex)
+            ' 確認してから登録するまでの間に、他の人が同じメールアドレスを登録した場合
+            AppLog.Warn("メールアドレスの重複によって、CSVを取り込めませんでした。1件も登録されていません。")
+            txtResult.Text = "取り込ませんでした。1件も登録されていません。" & vbCrLf & vbCrLf &
+                             "確認してから登録するまでの間に、他の人が同じメールアドレスを登録した可能性があります。" & vbCrLf &
+                             "「ファイルを選ぶ」から同じファイルをもう一度選んでください。重複の判定がやり直され、重複した行はスキップされます。"
+            ShowWarning("メールアドレスの重複によって、CSVを取り込めませんでした。1件も登録されていません。" & vbCrLf &
+                        "同じファイルをもう一度選んでやり直してください。", "取り込めません")
         Catch ex As Exception
             ' 途中で失敗しても、トランザクションにより1件も入っていない
             MessageUtils.ShowError("取込に失敗しました。1件も登録されていません。", ex)
