@@ -83,6 +83,18 @@ Public Class CustomerRepository
     End Function
 
     ''' <summary>
+    ''' 登録済のメールアドレス一覧
+    ''' </summary>
+    Public Async Function GetEmailsAsync() As Task(Of List(Of String))
+        Using db As New AppDbContext(_connectionString)
+            Return Await db.Customers.AsNoTracking().
+                Where(Function(c) Not String.IsNullOrEmpty(c.Email)).
+                Select(Function(c) c.Email).
+                ToListAsync()
+        End Using
+    End Function
+
+    ''' <summary>
     ''' 新規登録
     ''' </summary>
     ''' <param name="customer">
@@ -153,6 +165,27 @@ Public Class CustomerRepository
             db.Customers.Remove(entity)
             Await db.SaveChangesAsync()
             Return True
+        End Using
+    End Function
+
+    ''' <summary>
+    ''' 顧客をまとめて登録する。
+    ''' </summary>
+    Public Async Function ImportAsync(customers As IEnumerable(Of Customer)) As Task(Of Integer)
+        Using db As New AppDbContext(_connectionString)
+            Dim entities As List(Of Customer) = customers.Select(Function(c) New Customer With {
+                .Name = c.Name.Trim(),
+                .Kana = NullIfBlank(c.Kana),
+                .Email = NullIfBlank(c.Email),
+                .Phone = NullIfBlank(c.Phone),
+                .Address = NullIfBlank(c.Address),
+                .Memo = NullIfBlank(c.Memo)
+            }).ToList()
+
+            db.Customers.AddRange(entities)
+            Await db.SaveChangesAsync()
+
+            Return entities.Count
         End Using
     End Function
 

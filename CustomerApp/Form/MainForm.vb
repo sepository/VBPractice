@@ -91,7 +91,7 @@ Public Class MainForm
         UseWaitCursor = busy
 
         For Each ctrl As Control In New Control() {
-            txtSearch, btnSearch, dgvCustomers, btnNew, btnSave, btnDelete, btnOrders}
+            txtSearch, btnSearch, dgvCustomers, btnNew, btnSave, btnDelete, btnOrders, btnImport}
             ctrl.Enabled = Not busy
         Next
     End Sub
@@ -313,6 +313,30 @@ Public Class MainForm
         Using frm As New ExportForm()
             frm.ShowDialog(Me)
         End Using
+    End Sub
+
+    ''' <summary>
+    ''' CSV取込
+    ''' </summary>
+    Private Async Sub btnImport_Click(sender As Object, e As EventArgs) Handles btnImport.Click
+        Dim imported As Boolean
+
+        Using frm As New ImportForm()
+            frm.ShowDialog(Me)
+            imported = frm.Imported
+        End Using
+
+        ' 取り込んだ顧客を一覧に反映する
+        If imported Then
+            SetBusy(True)
+            Try
+                Await LoadCustomersAsync()
+            Finally
+                SetBusy(False)
+            End Try
+
+            ClearForm()
+        End If
     End Sub
 
 End Class

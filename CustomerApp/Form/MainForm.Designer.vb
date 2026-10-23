@@ -32,7 +32,6 @@ Partial Class MainForm
         txtKana = New TextBox()
         GroupBox1 = New GroupBox()
         GroupBox2 = New GroupBox()
-        btnProducts = New Button()
         btnOrders = New Button()
         txtAddress = New TextBox()
         Label7 = New Label()
@@ -42,12 +41,14 @@ Partial Class MainForm
         Label3 = New Label()
         txtEmail = New TextBox()
         Label1 = New Label()
+        btnProducts = New Button()
         btnNew = New Button()
         btnSave = New Button()
         btnDelete = New Button()
         GroupBox3 = New GroupBox()
         GroupBox4 = New GroupBox()
         btnExport = New Button()
+        btnImport = New Button()
         CType(dgvCustomers, ComponentModel.ISupportInitialize).BeginInit()
         GroupBox1.SuspendLayout()
         GroupBox2.SuspendLayout()
@@ -154,15 +155,6 @@ Partial Class MainForm
         GroupBox2.TabStop = False
         GroupBox2.Text = "入力"
         ' 
-        ' btnProducts
-        ' 
-        btnProducts.Location = New Point(6, 22)
-        btnProducts.Name = "btnProducts"
-        btnProducts.Size = New Size(75, 23)
-        btnProducts.TabIndex = 17
-        btnProducts.Text = "商品マスタ"
-        btnProducts.UseVisualStyleBackColor = True
-        ' 
         ' btnOrders
         ' 
         btnOrders.Location = New Point(298, 138)
@@ -237,6 +229,15 @@ Partial Class MainForm
         Label1.TabIndex = 10
         Label1.Text = "メール"
         ' 
+        ' btnProducts
+        ' 
+        btnProducts.Location = New Point(6, 22)
+        btnProducts.Name = "btnProducts"
+        btnProducts.Size = New Size(75, 23)
+        btnProducts.TabIndex = 17
+        btnProducts.Text = "商品マスタ"
+        btnProducts.UseVisualStyleBackColor = True
+        ' 
         ' btnNew
         ' 
         btnNew.Location = New Point(6, 22)
@@ -278,6 +279,7 @@ Partial Class MainForm
         ' 
         ' GroupBox4
         ' 
+        GroupBox4.Controls.Add(btnImport)
         GroupBox4.Controls.Add(btnExport)
         GroupBox4.Controls.Add(btnProducts)
         GroupBox4.Location = New Point(12, 472)
@@ -295,6 +297,15 @@ Partial Class MainForm
         btnExport.TabIndex = 18
         btnExport.Text = "エクスポート"
         btnExport.UseVisualStyleBackColor = True
+        ' 
+        ' btnImport
+        ' 
+        btnImport.Location = New Point(168, 22)
+        btnImport.Name = "btnImport"
+        btnImport.Size = New Size(75, 23)
+        btnImport.TabIndex = 19
+        btnImport.Text = "CSV取込"
+        btnImport.UseVisualStyleBackColor = True
         ' 
         ' MainForm
         ' 
@@ -344,5 +355,6 @@ Partial Class MainForm
     Friend WithEvents GroupBox3 As GroupBox
     Friend WithEvents GroupBox4 As GroupBox
     Friend WithEvents btnExport As Button
+    Friend WithEvents btnImport As Button
 
 End Class

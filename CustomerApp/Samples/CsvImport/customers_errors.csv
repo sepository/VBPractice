@@ -1,0 +1,5 @@
+﻿名前,フリガナ,メール,電話,住所,メモ
+,ヤマダ,a@example.com,,,名前が空(2行目)
+正常な人,,b@example.com,,,
+メール不正,,not-an-email,,,(4行目)
+列が足りない人,,c@example.com
