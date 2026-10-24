@@ -41,10 +41,15 @@ Public Module TestDatabase
 
             EnsureSafeTarget()
 
+            ' 前回のデータベースを削除する
             Using db As New AppDbContext(ConnectionString)
                 db.Database.EnsureDeleted()
-                db.Database.EnsureCreated()
             End Using
+
+            ' アプリ起動時と同じ手順でデータベースを作成する。
+            Dim runner As New MigrationRunner(ConnectionString, EmbeddedMigrations.Load())
+            runner.EnsureDatabaseExists()
+            runner.ApplyPending()
 
             _isReady = True
         End SyncLock
