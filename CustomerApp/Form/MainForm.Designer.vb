@@ -50,6 +50,7 @@ Partial Class MainForm
         GroupBox4 = New GroupBox()
         btnImport = New Button()
         btnExport = New Button()
+        btnBackup = New Button()
         CType(dgvCustomers, ComponentModel.ISupportInitialize).BeginInit()
         GroupBox1.SuspendLayout()
         GroupBox2.SuspendLayout()
@@ -245,7 +246,7 @@ Partial Class MainForm
         ' 
         btnProducts.Location = New Point(6, 22)
         btnProducts.Name = "btnProducts"
-        btnProducts.Size = New Size(75, 23)
+        btnProducts.Size = New Size(100, 23)
         btnProducts.TabIndex = 17
         btnProducts.Text = "商品マスタ"
         btnProducts.UseVisualStyleBackColor = True
@@ -291,6 +292,7 @@ Partial Class MainForm
         ' 
         ' GroupBox4
         ' 
+        GroupBox4.Controls.Add(btnBackup)
         GroupBox4.Controls.Add(btnImport)
         GroupBox4.Controls.Add(btnExport)
         GroupBox4.Controls.Add(btnProducts)
@@ -303,21 +305,30 @@ Partial Class MainForm
         ' 
         ' btnImport
         ' 
-        btnImport.Location = New Point(168, 22)
+        btnImport.Location = New Point(218, 22)
         btnImport.Name = "btnImport"
-        btnImport.Size = New Size(75, 23)
+        btnImport.Size = New Size(100, 23)
         btnImport.TabIndex = 19
         btnImport.Text = "CSV取込"
         btnImport.UseVisualStyleBackColor = True
         ' 
         ' btnExport
         ' 
-        btnExport.Location = New Point(87, 22)
+        btnExport.Location = New Point(112, 22)
         btnExport.Name = "btnExport"
-        btnExport.Size = New Size(75, 23)
+        btnExport.Size = New Size(100, 23)
         btnExport.TabIndex = 18
         btnExport.Text = "エクスポート"
         btnExport.UseVisualStyleBackColor = True
+        ' 
+        ' btnBackup
+        ' 
+        btnBackup.Location = New Point(324, 22)
+        btnBackup.Name = "btnBackup"
+        btnBackup.Size = New Size(100, 23)
+        btnBackup.TabIndex = 20
+        btnBackup.Text = "バックアップ・復元"
+        btnBackup.UseVisualStyleBackColor = True
         ' 
         ' MainForm
         ' 
@@ -369,5 +380,6 @@ Partial Class MainForm
     Friend WithEvents btnExport As Button
     Friend WithEvents btnImport As Button
     Friend WithEvents btnCancelSearch As Button
+    Friend WithEvents btnBackup As Button
 
 End Class

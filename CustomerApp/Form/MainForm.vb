@@ -97,7 +97,7 @@ Public Class MainForm
         UseWaitCursor = busy
 
         For Each ctrl As Control In New Control() {
-            txtSearch, btnSearch, dgvCustomers, btnNew, btnSave, btnDelete, btnOrders, btnImport}
+            txtSearch, btnSearch, dgvCustomers, btnNew, btnSave, btnDelete, btnOrders, btnImport, btnBackup}
             ctrl.Enabled = Not busy
         Next
     End Sub
@@ -367,6 +367,24 @@ Public Class MainForm
             End Try
 
             ClearForm()
+        End If
+    End Sub
+
+    ''' <summary>
+    ''' バックアップ・復元
+    ''' </summary>
+    Private Sub btnBackup_Click(sender As Object, e As EventArgs) Handles btnBackup.Click
+        Dim restored As Boolean
+
+        Using frm As New BackupForm()
+            frm.ShowDialog(Me)
+            restored = frm.Restored
+        End Using
+
+        ' 復元したあとは、画面の内容も、アプリが覚えていることも古い。再起動してもらう。
+        ' (起動時に、データベースの構造のバージョンが、改めて確認される)
+        If restored Then
+            Close()
         End If
     End Sub
 
