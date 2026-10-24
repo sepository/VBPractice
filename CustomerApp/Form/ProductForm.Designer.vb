@@ -36,6 +36,7 @@ Partial Class ProductForm
         btnSave = New Button()
         btnDelete = New Button()
         btnClose = New Button()
+        btnImport = New Button()
         CType(dgvProducts, ComponentModel.ISupportInitialize).BeginInit()
         GroupBox1.SuspendLayout()
         GroupBox2.SuspendLayout()
@@ -174,11 +175,21 @@ Partial Class ProductForm
         btnClose.Text = "閉じる"
         btnClose.UseVisualStyleBackColor = True
         ' 
+        ' btnImport
+        ' 
+        btnImport.Location = New Point(255, 334)
+        btnImport.Name = "btnImport"
+        btnImport.Size = New Size(75, 23)
+        btnImport.TabIndex = 7
+        btnImport.Text = "CSV取込"
+        btnImport.UseVisualStyleBackColor = True
+        ' 
         ' ProductForm
         ' 
         AutoScaleDimensions = New SizeF(7F, 15F)
         AutoScaleMode = AutoScaleMode.Font
         ClientSize = New Size(800, 366)
+        Controls.Add(btnImport)
         Controls.Add(btnClose)
         Controls.Add(btnDelete)
         Controls.Add(btnSave)
@@ -209,4 +220,5 @@ Partial Class ProductForm
     Friend WithEvents btnSave As Button
     Friend WithEvents btnDelete As Button
     Friend WithEvents btnClose As Button
+    Friend WithEvents btnImport As Button
 End Class

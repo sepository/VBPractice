@@ -81,7 +81,7 @@ Public Class ProductForm
         UseWaitCursor = busy
 
         For Each ctrl As Control In New Control() {
-            dgvProducts, btnNew, btnSave, btnDelete, btnClose}
+            dgvProducts, btnNew, btnSave, btnDelete, btnImport, btnClose}
             ctrl.Enabled = Not busy
         Next
     End Sub
@@ -238,6 +238,27 @@ Public Class ProductForm
         Finally
             SetBusy(False)
         End Try
+    End Sub
+
+    ''' <summary>
+    ''' CSV取込
+    ''' </summary>
+    Private Async Sub btnImport_Click(sender As Object, e As EventArgs) Handles btnImport.Click
+        Dim imported As Boolean
+        Using frm As New ProductImportForm()
+            frm.ShowDialog(Me)
+            imported = frm.Imported
+        End Using
+
+        If imported Then
+            SetBusy(True)
+            Try
+                Await LoadProductsAsync()
+                ClearForm()
+            Finally
+                SetBusy(False)
+            End Try
+        End If
     End Sub
 
     ''' <summary>

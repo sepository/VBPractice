@@ -1,4 +1,5 @@
-﻿Imports Microsoft.EntityFrameworkCore
+﻿Imports System.Threading
+Imports Microsoft.EntityFrameworkCore
 
 Public Class ProductRepository
 
@@ -28,6 +29,19 @@ Public Class ProductRepository
                 Where(Function(p) p.IsActive).
                 OrderBy(Function(p) p.ProductCode).
                 ToListAsync()
+        End Using
+    End Function
+
+    ''' <summary>
+    ''' 商品コードを全件取得
+    ''' </summary>
+    ''' <param name="cancellationToken"></param>
+    ''' <returns></returns>
+    Public Async Function GetCodesAsync(Optional cancellationToken As CancellationToken = Nothing) As Task(Of List(Of String))
+        Using db As New AppDbContext(_connectionString)
+            Return Await db.Products.AsNoTracking().
+                Select(Function(p) p.ProductCode).
+                ToListAsync(cancellationToken)
         End Using
     End Function
 
@@ -86,6 +100,29 @@ Public Class ProductRepository
             db.Products.Remove(entity)
             Await db.SaveChangesAsync()
             Return True
+        End Using
+    End Function
+
+    ''' <summary>
+    ''' CSVインポート
+    ''' </summary>
+    Public Async Function ImportAsync(products As IEnumerable(Of Product)) As Task(Of Integer)
+        Using db As New AppDbContext(_connectionString)
+            Dim entities As New List(Of Product)()
+
+            For Each p As Product In products
+                entities.Add(New Product With {
+                    .ProductCode = p.ProductCode.Trim(),
+                    .Name = p.Name.Trim(),
+                    .UnitPrice = p.UnitPrice,
+                    .IsActive = p.IsActive
+                })
+            Next
+
+            db.Products.AddRange(entities)
+            Await db.SaveChangesAsync()
+
+            Return entities.Count
         End Using
     End Function
 
