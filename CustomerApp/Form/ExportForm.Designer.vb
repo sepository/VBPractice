@@ -35,6 +35,7 @@ Partial Class ExportForm
         btnExport = New Button()
         btnClose = New Button()
         btnCancel = New Button()
+        rdoProducts = New RadioButton()
         GroupBox1.SuspendLayout()
         GroupBox2.SuspendLayout()
         GroupBox3.SuspendLayout()
@@ -54,10 +55,10 @@ Partial Class ExportForm
         ' rdoOrders
         ' 
         rdoOrders.AutoSize = True
-        rdoOrders.Location = New Point(85, 22)
+        rdoOrders.Location = New Point(167, 22)
         rdoOrders.Name = "rdoOrders"
         rdoOrders.Size = New Size(73, 19)
-        rdoOrders.TabIndex = 1
+        rdoOrders.TabIndex = 2
         rdoOrders.TabStop = True
         rdoOrders.Text = "注文明細"
         rdoOrders.UseVisualStyleBackColor = True
@@ -111,11 +112,12 @@ Partial Class ExportForm
         ' 
         ' GroupBox1
         ' 
-        GroupBox1.Controls.Add(rdoCustomers)
         GroupBox1.Controls.Add(rdoOrders)
+        GroupBox1.Controls.Add(rdoProducts)
+        GroupBox1.Controls.Add(rdoCustomers)
         GroupBox1.Location = New Point(12, 12)
         GroupBox1.Name = "GroupBox1"
-        GroupBox1.Size = New Size(230, 60)
+        GroupBox1.Size = New Size(468, 60)
         GroupBox1.TabIndex = 8
         GroupBox1.TabStop = False
         GroupBox1.Text = "出力"
@@ -127,7 +129,7 @@ Partial Class ExportForm
         GroupBox2.Controls.Add(dtpTo)
         GroupBox2.Location = New Point(12, 78)
         GroupBox2.Name = "GroupBox2"
-        GroupBox2.Size = New Size(230, 60)
+        GroupBox2.Size = New Size(468, 60)
         GroupBox2.TabIndex = 9
         GroupBox2.TabStop = False
         GroupBox2.Text = "期間"
@@ -138,7 +140,7 @@ Partial Class ExportForm
         GroupBox3.Controls.Add(rdoCsv)
         GroupBox3.Location = New Point(12, 144)
         GroupBox3.Name = "GroupBox3"
-        GroupBox3.Size = New Size(230, 60)
+        GroupBox3.Size = New Size(468, 60)
         GroupBox3.TabIndex = 10
         GroupBox3.TabStop = False
         GroupBox3.Text = "形式"
@@ -173,6 +175,17 @@ Partial Class ExportForm
         btnCancel.TabIndex = 13
         btnCancel.Text = "中止"
         btnCancel.UseVisualStyleBackColor = True
+        ' 
+        ' rdoProducts
+        ' 
+        rdoProducts.AutoSize = True
+        rdoProducts.Location = New Point(85, 22)
+        rdoProducts.Name = "rdoProducts"
+        rdoProducts.Size = New Size(76, 19)
+        rdoProducts.TabIndex = 1
+        rdoProducts.TabStop = True
+        rdoProducts.Text = "商品マスタ"
+        rdoProducts.UseVisualStyleBackColor = True
         ' 
         ' ExportForm
         ' 
@@ -209,4 +222,5 @@ Partial Class ExportForm
     Friend WithEvents btnExport As Button
     Friend WithEvents btnClose As Button
     Friend WithEvents btnCancel As Button
+    Friend WithEvents rdoProducts As RadioButton
 End Class

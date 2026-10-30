@@ -29,6 +29,22 @@ Public Module ExportTableBuilder
     End Function
 
     ''' <summary>
+    ''' 商品マスタ
+    ''' </summary>
+    Public Function FromProducts(products As IEnumerable(Of Product)) As ExportTable
+        Dim table As New ExportTable With {.SheetName = "商品マスタ"}
+
+        table.Headers.AddRange(New String() {"商品コード", "商品名", "単価", "販売中"})
+        table.ColumnFormats.AddRange(New String() {Nothing, Nothing, "#,##0", Nothing})
+
+        For Each p As Product In products
+            table.Rows.Add(New Object() {p.ProductCode, p.Name, p.UnitPrice, If(p.IsActive, "販売中", "販売停止")})
+        Next
+
+        Return table
+    End Function
+
+    ''' <summary>
     ''' 注文明細
     ''' </summary>
     Public Function FromOrderLines(lines As IEnumerable(Of OrderLineRow)) As ExportTable

@@ -5,6 +5,7 @@ Public Class ExportForm
 
     Private ReadOnly _customerRepo As New CustomerRepository(AppConfig.ConnectionString)
     Private ReadOnly _reportRepo As New ReportRepository(AppConfig.ConnectionString)
+    Private ReadOnly _productRepo As New ProductRepository(AppConfig.ConnectionString)
 
     Private _isBusy As Boolean = False
     Private _exportCts As CancellationTokenSource = Nothing
@@ -28,7 +29,7 @@ Public Class ExportForm
     End Sub
 
     Private Sub rdoTarget_CheckedChanged(sender As Object, e As EventArgs) _
-        Handles rdoCustomers.CheckedChanged, rdoOrders.CheckedChanged
+        Handles rdoCustomers.CheckedChanged, rdoProducts.CheckedChanged, rdoOrders.CheckedChanged
 
         UpdatePeriodEnabled()
     End Sub
@@ -57,6 +58,7 @@ Public Class ExportForm
 
     Private Async Sub btnExport_Click(sender As Object, e As EventArgs) Handles btnExport.Click
         Dim exportOrders As Boolean = rdoOrders.Checked
+        Dim exportProducts As Boolean = rdoProducts.Checked
         Dim useExcel As Boolean = rdoExcel.Checked
         Dim fromDate As DateTime = dtpFrom.Value.Date
         Dim toDate As DateTime = dtpTo.Value.Date
@@ -67,16 +69,20 @@ Public Class ExportForm
             Return
         End If
 
-        Dim path As String = AskSavePath(exportOrders, useExcel)
+        Dim kind As String = If(exportOrders, "注文明細", If(exportProducts, "商品マスタ", "顧客一覧"))
+
+        Dim path As String = AskSavePath(kind, useExcel)
         If path Is Nothing Then
             Return
         End If
 
-        Dim kind As String = If(exportOrders, "注文明細", "顧客一覧")
         Dim format As String = If(useExcel, "Excel", "CSV")
 
         ' 書き出しは一時ファイルに行い、最後まで成功したら本来の名前に差し替える
-        Dim tempPath As String = path & ".tmp"
+        Dim tempPath As String = System.IO.Path.Combine(
+            System.IO.Path.GetDirectoryName(path),
+            System.IO.Path.GetFileNameWithoutExtension(path) & ".tmp" &
+            System.IO.Path.GetExtension(path))
 
         Using cts As New CancellationTokenSource()
             _exportCts = cts
@@ -89,6 +95,9 @@ Public Class ExportForm
                 If exportOrders Then
                     Dim lines As List(Of OrderLineRow) = Await _reportRepo.GetOrderLinesAsync(fromDate, toDate, token)
                     table = ExportTableBuilder.FromOrderLines(lines)
+                ElseIf exportProducts Then
+                    Dim products As List(Of Product) = Await _productRepo.GetAllAsync(token)
+                    table = ExportTableBuilder.FromProducts(products)
                 Else
                     Dim customers As List(Of Customer) = Await _customerRepo.GetAllAsync(Nothing, token)
                     table = ExportTableBuilder.FromCustomers(customers)
@@ -162,9 +171,7 @@ Public Class ExportForm
         End Try
     End Sub
 
-    Private Function AskSavePath(exportOrders As Boolean, useExcel As Boolean) As String
-        Dim baseName As String = If(exportOrders, "注文明細", "顧客一覧")
-
+    Private Function AskSavePath(baseName As String, useExcel As Boolean) As String
         Using dlg As New SaveFileDialog()
             dlg.Title = "エクスポート先の指定"
             dlg.OverwritePrompt = True

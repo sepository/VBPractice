@@ -12,11 +12,11 @@ Public Class ProductRepository
     ''' <summary>
     ''' 全件取得
     ''' </summary>
-    Public Async Function GetAllAsync() As Task(Of List(Of Product))
+    Public Async Function GetAllAsync(Optional cancellationToken As CancellationToken = Nothing) As Task(Of List(Of Product))
         Using db As New AppDbContext(_connectionString)
             Return Await db.Products.AsNoTracking().
                 OrderBy(Function(p) p.ProductCode).
-                ToListAsync()
+                ToListAsync(cancellationToken)
         End Using
     End Function
 

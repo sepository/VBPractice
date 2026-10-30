@@ -248,7 +248,7 @@ Public Module ProductCsvImporter
     End Function
 
     Private Function RemoveFormulaGuard(value As String) As String
-        If value.Length >= 2 AndAlso value(0) = "'"c AndAlso "=+-@".IndexOf(value(1)) Then
+        If value.Length >= 2 AndAlso value(0) = "'"c AndAlso "=+-@".IndexOf(value(1)) >= 0 Then
             Return value.Substring(1)
         End If
 
